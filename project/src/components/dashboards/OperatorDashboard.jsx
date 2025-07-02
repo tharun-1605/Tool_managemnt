@@ -32,9 +32,9 @@ const OperatorDashboard = () => {
   const fetchData = async () => {
     try {
       const [statsRes, toolsRes, usageRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/dashboard/stats'),
-        axios.get('http://localhost:5000/api/tools/operator-tools'),
-        axios.get('http://localhost:5000/api/usage')
+        axios.get('https://tool-managemnt.onrender.com/api/dashboard/stats'),
+        axios.get('https://tool-managemnt.onrender.com/api/tools/operator-tools'),
+        axios.get('https://tool-managemnt.onrender.com/api/usage')
       ]);
 
       setStats(statsRes.data);
@@ -52,7 +52,7 @@ const OperatorDashboard = () => {
 
   const handleStartUsage = async (toolId) => {
     try {
-      const response = await axios.post(`http://localhost:5000/api/tools/${toolId}/start-usage`);
+      const response = await axios.post(`https://tool-managemnt.onrender.com/api/tools/${toolId}/start-usage`);
       alert(response.data.message);
       fetchData(); // Refresh data
     } catch (error) {
@@ -63,7 +63,7 @@ const OperatorDashboard = () => {
 
   const handleStopUsage = async (toolId) => {
     try {
-      const response = await axios.post(`http://localhost:5000/api/tools/${toolId}/stop-usage`);
+      const response = await axios.post(`https://tool-managemnt.onrender.com/api/tools/${toolId}/stop-usage`);
       alert(response.data.message);
       fetchData(); // Refresh data
     } catch (error) {

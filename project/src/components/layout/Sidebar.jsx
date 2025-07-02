@@ -30,7 +30,7 @@ const Sidebar = () => {
 
   const checkActiveInstances = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/tools/operator-tools');
+      const response = await axios.get('https://tool-managemnt.onrender.com/api/tools/operator-tools');
       setActiveInstances(response.data.activeInstances || []);
     } catch (error) {
       console.error('Error checking active instances:', error);
