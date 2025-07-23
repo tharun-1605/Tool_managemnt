@@ -23,7 +23,8 @@ const ToolMonitor = ({ tools }) => {
       case 'low-life':
         return tool.remainingLife <= tool.thresholdLimit;
       case 'in-use':
-        return tool.status === 'in-use';
+        // Include reusable tools that are in use
+        return tool.status === 'in-use' || (tool.reusable && tool.status === 'in-use');
       case 'available':
         return tool.status === 'available';
       case 'maintenance':
@@ -91,7 +92,12 @@ const ToolMonitor = ({ tools }) => {
                 <p className="text-sm text-gray-600 capitalize">{tool.category}</p>
                 <p className="text-xs text-blue-600">Shop: {tool.shopkeeper?.shopId}</p>
               </div>
-              {getStatusIcon(tool)}
+            {getStatusIcon(tool)}
+            {tool.reusable && (
+              <span className="ml-2 inline-block bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-full">
+                Reusable
+              </span>
+            )}
             </div>
 
             <div className="space-y-3">

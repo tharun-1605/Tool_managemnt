@@ -55,6 +55,10 @@ const toolSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  reusable: {
+    type: Boolean,
+    default: false
+  },
   stock: {
     type: Number,
     default: 1,

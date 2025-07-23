@@ -53,7 +53,7 @@ const MyToolsList = ({ tools }) => {
               <p className="text-sm text-gray-600 mb-4">{tool.description}</p>
 
               {/* Quantity Stats */}
-              <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="grid grid-cols-4 gap-2 mb-4">
                 <div className="text-center p-2 bg-blue-50 rounded-lg">
                   <Package className="w-4 h-4 text-blue-600 mx-auto mb-1" />
                   <p className="text-xs text-gray-600">Ordered</p>
@@ -69,27 +69,40 @@ const MyToolsList = ({ tools }) => {
                   <p className="text-xs text-gray-600">In Use</p>
                   <p className="font-bold text-orange-600">{tool.inUseQuantity}</p>
                 </div>
+                <div className="text-center p-2 bg-purple-50 rounded-lg">
+                  <Package className="w-4 h-4 text-purple-600 mx-auto mb-1" />
+                  <p className="text-xs text-gray-600">Reusable</p>
+                  <p className="font-bold text-purple-600">{tool.reusable ? 1 : 0}</p>
+                </div>
               </div>
 
-              {/* Life Progress */}
+              {/* Life Progress or Reusable Badge */}
               <div className="mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-gray-700">Tool Life</span>
-                  <span className={`text-sm font-bold ${getLifeColor(tool)}`}>
-                    {tool.remainingLife.toFixed(1)}h / {tool.lifeLimit}h
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className={`h-2 rounded-full ${getLifeBarColor(tool)} transition-all`}
-                    style={{ width: `${Math.max(0, (tool.remainingLife / tool.lifeLimit) * 100)}%` }}
-                  ></div>
-                </div>
-                {tool.remainingLife <= tool.thresholdLimit && (
-                  <div className="flex items-center gap-1 mt-2 text-red-600">
-                    <AlertTriangle className="w-4 h-4" />
-                    <span className="text-xs">Below threshold ({tool.thresholdLimit}h)</span>
+                {tool.reusable ? (
+                  <div className="flex items-center justify-center bg-gray-100 text-gray-600 rounded-full py-2">
+                    <span className="text-sm font-medium">Reusable</span>
                   </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-gray-700">Tool Life</span>
+                      <span className={`text-sm font-bold ${getLifeColor(tool)}`}>
+                        {tool.remainingLife.toFixed(1)}h / {tool.lifeLimit}h
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full ${getLifeBarColor(tool)} transition-all`}
+                        style={{ width: `${Math.max(0, (tool.remainingLife / tool.lifeLimit) * 100)}%` }}
+                      ></div>
+                    </div>
+                    {tool.remainingLife <= tool.thresholdLimit && (
+                      <div className="flex items-center gap-1 mt-2 text-red-600">
+                        <AlertTriangle className="w-4 h-4" />
+                        <span className="text-xs">Below threshold ({tool.thresholdLimit}h)</span>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 

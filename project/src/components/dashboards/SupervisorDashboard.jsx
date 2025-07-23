@@ -74,6 +74,54 @@ const SupervisorDashboard = () => {
     }
   };
 
+  const handleExport = () => {
+    const headers = [
+      'Tool Name',
+      'Tool Category',
+      'Operator Name',
+      'Operator Email',
+      'Instance Number',
+      'Start Time',
+      'End Time',
+      'Duration (hours)',
+      'Is Active',
+    ];
+
+    const rows = [];
+    for (const toolId in analytics.detailedUsage) {
+      const toolData = analytics.detailedUsage[toolId];
+      for (const operatorId in toolData.operators) {
+        const operatorData = toolData.operators[operatorId];
+        for (const instance of operatorData.instances) {
+          rows.push([
+            toolData.toolName,
+            toolData.toolCategory,
+            operatorData.operatorName,
+            operatorData.operatorEmail,
+            instance.instanceNumber,
+            new Date(instance.startTime).toLocaleString(),
+            instance.endTime ? new Date(instance.endTime).toLocaleString() : 'N/A',
+            instance.duration ? instance.duration.toFixed(2) : 'N/A',
+            instance.isActive ? 'Yes' : 'No',
+          ]);
+        }
+      }
+    }
+
+    const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.href) {
+      URL.revokeObjectURL(link.href);
+    }
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute('download', 'tool_usage_report.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handlePlaceOrder = async (toolId, quantity, notes) => {
     try {
       await axios.post('https://tool-managemnt.onrender.com/api/orders', {
@@ -195,9 +243,22 @@ const SupervisorDashboard = () => {
                   <div key={tool._id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
                     <div>
                       <p className="font-medium text-gray-900">{tool.name}</p>
-                      <p className="text-sm text-green-600">
-                        Ordered: {tool.companyQuantity} | Available: {tool.availableQuantity} | In Use: {tool.inUseQuantity}
-                      </p>
+              {(() => {
+                const reusableAvailableCount = myTools
+                  .filter(t => t.reusable)
+                  .reduce((sum, t) => sum + (t.availableQuantity || 0), 0);
+                return (
+                  <p className="text-sm text-green-600">
+                    Ordered: {tool.companyQuantity} | Available: {tool.availableQuantity} 
+                    {reusableAvailableCount > 0 && (
+                      <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                        Reusable: {reusableAvailableCount}
+                      </span>
+                    )}
+                    | In Use: {tool.inUseQuantity}
+                  </p>
+                );
+              })()}
                     </div>
                     <div className="text-right">
                       <div className="flex items-center gap-1">
@@ -277,10 +338,19 @@ const SupervisorDashboard = () => {
 
             {/* Detailed Usage Analytics */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5 text-blue-500" />
-                Detailed Usage by Tool & Operator
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-blue-500" />
+                  Detailed Usage by Tool & Operator
+                </h3>
+                <button
+                  onClick={handleExport}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                >
+                  <Plus className="w-4 h-4" />
+                  Export Report
+                </button>
+              </div>
               
               <div className="space-y-6">
                 {Object.entries(analytics.detailedUsage || {}).map(([toolId, toolData]) => (
