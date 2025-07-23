@@ -19,7 +19,7 @@ export const NotificationProvider = ({ children }) => {
 
   useEffect(() => {
     if (user) {
-      const newSocket = io('https://tool-managemnt.onrender.com');
+      const newSocket = io('https://tool-managemnt.onrender.com', { transports: ['websocket'] });
       setSocket(newSocket);
 
       newSocket.emit('join-role', user.role);

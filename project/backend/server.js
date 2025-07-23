@@ -17,17 +17,13 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: ["https://tool-managemnt.onrender.com", "http://localhost:5173"],
+    origin: ["https://tool-managemnt.onrender.com",],
     methods: ["GET", "POST"]
   }
 });
 
 // Middleware
-app.use(cors({
-    origin: ["https://tool-managemnt.onrender.com", "http://localhost:5173"],
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-}));
+app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
