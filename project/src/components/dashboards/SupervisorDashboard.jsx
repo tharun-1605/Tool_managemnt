@@ -300,12 +300,17 @@ const SupervisorDashboard = () => {
           </div>
         )}
 
-        {activeTab === 'monitor' && (
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Tool Monitor</h2>
-            <ToolMonitor tools={tools} />
-          </div>
-        )}
+      {activeTab === 'monitor' && (
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Tool Monitor</h2>
+          {(() => {
+            // Filter tools to only those in supervisor's orders
+            const orderToolIds = new Set(orders.map(order => order.tool?._id));
+            const filteredTools = tools.filter(tool => orderToolIds.has(tool._id));
+            return <ToolMonitor tools={filteredTools} detailedUsage={analytics.detailedUsage} />;
+          })()}
+        </div>
+      )}
 
         {activeTab === 'analytics' && (
           <div>
