@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { LogIn, Mail, Lock, Wrench, AlertCircle } from 'lucide-react';
+import { LogIn, Mail, Lock, Shield, HardHat } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -34,97 +35,151 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        {/* Header */}
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Professional Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mb-4">
-            <Wrench className="w-8 h-8 text-white" />
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center shadow-md">
+              <HardHat className="w-8 h-8 text-white" />
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to your cutting tool management account</p>
+          <h1 className="text-2xl font-bold text-gray-800 mb-1">INDUSTRIAL CONTROL</h1>
+          <p className="text-gray-600 text-sm">Secure access to operations dashboard</p>
         </div>
 
-        {/* Login Form */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Login Card */}
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+          {/* Status Bar */}
+          <div className="bg-gray-800 text-white px-4 py-2 text-xs flex items-center">
+            <div className="w-2 h-2 rounded-full bg-green-400 mr-2"></div>
+            <span>SECURE CONNECTION ESTABLISHED</span>
+          </div>
+
+          {/* Form Content */}
+          <div className="p-6">
             {error && (
-              <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
-                <AlertCircle className="w-5 h-5" />
-                <span className="text-sm">{error}</span>
-              </div>
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-200 rounded text-red-700 text-sm"
+              >
+                <Shield className="w-4 h-4" />
+                <span>{error}</span>
+              </motion.div>
             )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="Enter your email"
-                  required
-                />
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  WORK EMAIL
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Mail className="h-4 w-4" />
+                  </div>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full pl-9 pr-4 py-2.5 text-sm bg-gray-50 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    placeholder="employee@company.com"
+                    required
+                  />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="Enter your password"
-                  required
-                />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  PASSWORD
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Lock className="h-4 w-4" />
+                  </div>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full pl-9 pr-4 py-2.5 text-sm bg-gray-50 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              <div className="pt-2">
+                <motion.button
+                  type="submit"
+                  disabled={loading}
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.99 }}
+                  className="w-full flex justify-center items-center gap-2 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 outline-none transition-all disabled:opacity-50"
+                >
+                  {loading ? (
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  ) : (
+                    <>
+                      <LogIn className="w-4 h-4" />
+                      AUTHENTICATE
+                    </>
+                  )}
+                </motion.button>
+              </div>
+            </form>
+          </div>
+
+          {/* Footer */}
+          <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+            <Link 
+              to="/forgot-password" 
+              className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
             >
-              {loading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-              ) : (
-                <>
-                  <LogIn className="w-5 h-5" />
-                  Sign In
-                </>
-              )}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-blue-600 hover:text-blue-700 font-medium transition-colors">
-                Sign up here
-              </Link>
-            </p>
+              Forgot password?
+            </Link>
+            <div className="text-xs text-gray-500">
+              Need access? <Link to="/register" className="text-blue-600 hover:underline">Request account</Link>
+            </div>
           </div>
         </div>
 
-        {/* Demo Credentials */}
-        <div className="mt-6 bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
-          <h3 className="font-medium mb-2">Demo Credentials:</h3>
-          <div className="space-y-1">
-            <p><strong>Shopkeeper:</strong> shop@demo.com / password123</p>
-            <p><strong>Supervisor:</strong> supervisor@demo.com / password123</p>
-            <p><strong>Operator:</strong> operator@demo.com / password123</p>
+        {/* Security Info */}
+        <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="flex items-start gap-3">
+            <Shield className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <h4 className="text-xs font-medium text-gray-800 mb-1">SECURITY NOTICE</h4>
+              <p className="text-xs text-gray-600">
+                This system contains confidential industrial data. Unauthorized access is prohibited.
+                All activities are monitored and recorded.
+              </p>
+            </div>
           </div>
+        </div>
+
+        {/* Demo Access */}
+        <div className="mt-4">
+          <details className="text-xs text-gray-600">
+            <summary className="cursor-pointer text-blue-600 hover:underline">Demo Access Credentials</summary>
+            <div className="mt-2 bg-gray-50 p-3 rounded border border-gray-200 space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+                <span className="font-mono">shop@demo.com / password123</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-600"></div>
+                <span className="font-mono">supervisor@demo.com / password123</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-amber-600"></div>
+                <span className="font-mono">operator@demo.com / password123</span>
+              </div>
+            </div>
+          </details>
         </div>
       </div>
     </div>

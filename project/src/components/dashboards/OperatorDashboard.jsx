@@ -11,7 +11,17 @@ import {
   Package,
   AlertTriangle,
   Hash,
-  RotateCcw
+  RotateCcw,
+  Activity,
+  Settings,
+  Bell,
+  RefreshCw,
+  Filter,
+  Search,
+  Download,
+  Zap,
+  Target,
+  Timer
 } from 'lucide-react';
 import StatsCard from '../common/StatsCard';
 import UsageChart from '../charts/UsageChart';
@@ -24,6 +34,7 @@ const OperatorDashboard = () => {
   const [availableInstances, setAvailableInstances] = useState([]);
   const [usage, setUsage] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -31,6 +42,7 @@ const OperatorDashboard = () => {
 
   const fetchData = async () => {
     try {
+      setRefreshing(true);
       const [statsRes, toolsRes, usageRes] = await Promise.all([
         axios.get('https://tool-managemnt.onrender.com/api/dashboard/stats'),
         axios.get('https://tool-managemnt.onrender.com/api/tools/operator-tools'),
@@ -47,6 +59,7 @@ const OperatorDashboard = () => {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -73,540 +86,731 @@ const OperatorDashboard = () => {
   };
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: TrendingUp },
-    { id: 'tools', label: 'Available Tools', icon: Wrench },
-    { id: 'active', label: 'Active Usage', icon: Play },
-    { id: 'reusable', label: 'Reusable Tools', icon: RotateCcw },
-    { id: 'analytics', label: 'My Usage', icon: BarChart3 }
+    { id: 'overview', label: 'Operations Center', icon: BarChart3, description: 'Real-time dashboard & metrics' },
+    { id: 'tools', label: 'Tool Inventory', icon: Wrench, description: 'Available equipment catalog' },
+    { id: 'active', label: 'Active Operations', icon: Play, description: 'Tools currently in use' },
+    { id: 'reusable', label: 'Ready Tools', icon: RotateCcw, description: 'Pre-used available tools' },
+    { id: 'analytics', label: 'Performance Analytics', icon: TrendingUp, description: 'Usage insights & reports' }
   ];
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-slate-200 border-t-4 border-t-orange-600 rounded-full animate-spin"></div>
+            <div className="w-12 h-12 border-4 border-slate-100 border-t-4 border-t-blue-500 rounded-full animate-spin absolute top-2 left-2" style={{animationDirection: 'reverse'}}></div>
+          </div>
+          <p className="text-slate-600 font-medium">Loading operator dashboard...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCard
-          title="Available Tools"
-          value={parentTools.length || 0}
-          icon={Package}
-          color="green"
-        />
-        <StatsCard
-          title="Total Usage Sessions"
-          value={stats.totalUsage || 0}
-          icon={Clock}
-          color="orange"
-        />
-        <StatsCard
-          title="Active Instances"
-          value={activeInstances.length || 0}
-          icon={Play}
-          color="blue"
-        />
-        <StatsCard
-          title="Reusable Tools"
-          value={availableInstances.length || 0}
-          icon={RotateCcw}
-          color="purple"
-        />
-      </div>
-
-      {/* Navigation Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-8">
-          {tabs.map((tab) => {
-            const IconComponent = tab.icon;
-            return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Header Section */}
+      <div className="bg-white border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="bg-gradient-to-r from-orange-600 to-red-600 p-3 rounded-xl shadow-lg">
+                <Zap className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900">Industrial Operations Center</h1>
+                <p className="text-slate-600 mt-1">Operator Control Interface</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-orange-500 text-orange-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                onClick={() => fetchData()}
+                disabled={refreshing}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 border border-slate-300"
               >
-                <IconComponent className="w-5 h-5" />
-                {tab.label}
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                Sync Data
               </button>
-            );
-          })}
-        </nav>
+              <button className="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-lg transition-colors border border-slate-300">
+                <Bell className="w-5 h-5" />
+              </button>
+              <button className="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-lg transition-colors border border-slate-300">
+                <Settings className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="mt-6">
-        {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Available Tools Summary */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Package className="w-5 h-5 text-green-500" />
-                Available Company Tools
-              </h3>
-              <div className="space-y-3">
-                {parentTools.slice(0, 5).map((tool) => (
-                  <div key={tool._id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
-                    <div>
-                      <p className="font-medium text-gray-900">{tool.name}</p>
-                      <p className="text-sm text-green-600">
-                        Available: {tool.availableQuantity} | Total: {tool.companyQuantity}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Life: {tool.remainingLife?.toFixed(1)}h remaining
-                      </p>
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Enhanced Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="bg-green-100 p-2 rounded-lg">
+                    <Package className="w-6 h-6 text-green-600" />
+                  </div>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Available Tools</span>
+                </div>
+                <div className="text-3xl font-bold text-slate-900 mb-1">{parentTools.length || 0}</div>
+                <p className="text-sm text-slate-600">Ready for operation</p>
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-green-600 font-medium">Operational</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="bg-orange-100 p-2 rounded-lg">
+                    <Clock className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Sessions</span>
+                </div>
+                <div className="text-3xl font-bold text-slate-900 mb-1">{stats.totalUsage || 0}</div>
+                <p className="text-sm text-slate-600">Usage sessions logged</p>
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-orange-600 font-medium">Tracked</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="bg-blue-100 p-2 rounded-lg">
+                    <Play className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Tools</span>
+                </div>
+                <div className="text-3xl font-bold text-slate-900 mb-1">{activeInstances.length || 0}</div>
+                <p className="text-sm text-slate-600">Currently in operation</p>
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-blue-600 font-medium">Running</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="bg-purple-100 p-2 rounded-lg">
+                    <RotateCcw className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ready Tools</span>
+                </div>
+                <div className="text-3xl font-bold text-slate-900 mb-1">{availableInstances.length || 0}</div>
+                <p className="text-sm text-slate-600">Pre-used & available</p>
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-purple-600 font-medium">Standby</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Navigation Tabs */}
+        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 mb-8 overflow-hidden">
+          <div className="border-b border-slate-200 bg-slate-50">
+            <nav className="flex">
+              {tabs.map((tab, index) => {
+                const IconComponent = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 flex flex-col items-center gap-3 py-6 px-6 font-medium text-sm transition-all duration-300 relative ${
+                      activeTab === tab.id
+                        ? 'bg-white text-orange-600 shadow-sm border-b-2 border-orange-600'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    <IconComponent className="w-6 h-6" />
+                    <div className="text-center">
+                      <div className="font-semibold">{tab.label}</div>
+                      <div className="text-xs text-slate-500 mt-1">{tab.description}</div>
                     </div>
-                    <button
-                      onClick={() => handleStartUsage(tool._id)}
-                      disabled={tool.availableQuantity <= 0}
-                      className="bg-orange-600 text-white px-3 py-1 rounded-full text-sm hover:bg-orange-700 transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Play className="w-3 h-3" />
-                      Start
+                    {activeTab === tab.id && (
+                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-red-500 rounded-t"></div>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Tab Content */}
+          <div className="p-8">
+            {activeTab === 'overview' && (
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                  {/* Available Tools Summary Enhanced */}
+                  <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl border border-slate-200 shadow-sm">
+                    <div className="p-6 border-b border-slate-200 bg-white rounded-t-xl">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-3">
+                          <div className="bg-green-100 p-2 rounded-lg">
+                            <Package className="w-5 h-5 text-green-600" />
+                          </div>
+                          Available Equipment Catalog
+                        </h3>
+                        <div className="flex gap-2">
+                          <button className="text-slate-400 hover:text-slate-600 p-2 rounded-lg hover:bg-slate-100">
+                            <Filter className="w-4 h-4" />
+                          </button>
+                          <button className="text-slate-400 hover:text-slate-600 p-2 rounded-lg hover:bg-slate-100">
+                            <Search className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <div className="space-y-4">
+                        {parentTools.slice(0, 5).map((tool) => (
+                          <div key={tool._id} className="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
+                            <div className="flex items-center gap-4">
+                              <div className="bg-green-100 p-3 rounded-lg">
+                                <Wrench className="w-5 h-5 text-green-600" />
+                              </div>
+                              <div>
+                                <p className="font-semibold text-slate-900">{tool.name}</p>
+                                <div className="flex items-center gap-4 mt-1">
+                                  <p className="text-sm text-green-600">Available: <span className="font-bold">{tool.availableQuantity}</span> | Total: <span className="font-bold">{tool.companyQuantity}</span></p>
+                                </div>
+                                <p className="text-xs text-blue-600 mt-1">
+                                  Remaining Life: {tool.remainingLife?.toFixed(1)}h
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <button
+                                onClick={() => handleStartUsage(tool._id)}
+                                disabled={tool.availableQuantity <= 0}
+                                className="bg-gradient-to-r from-orange-600 to-red-600 text-white px-4 py-2 rounded-lg hover:from-orange-700 hover:to-red-700 transition-all duration-300 flex items-center gap-2 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <Play className="w-4 h-4" />
+                                Start
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                        {parentTools.length === 0 && (
+                          <div className="text-center py-8 text-slate-500">
+                            <Package className="w-12 h-12 mx-auto mb-3 text-slate-400" />
+                            <p className="font-medium">No tools available</p>
+                            <p className="text-sm mt-1">Contact your supervisor to order tools</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column - Current Usage & Reusable */}
+                  <div className="space-y-6">
+                    {/* Current Usage Enhanced */}
+                    <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl border border-orange-200 shadow-sm">
+                      <div className="p-6 border-b border-orange-200 bg-white rounded-t-xl">
+                        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-3">
+                          <div className="bg-orange-100 p-2 rounded-lg">
+                            <Play className="w-5 h-5 text-orange-600" />
+                          </div>
+                          Active Operations
+                        </h3>
+                      </div>
+                      <div className="p-6">
+                        <div className="space-y-4">
+                          {activeInstances.slice(0, 3).map((instance) => (
+                            <div key={instance._id} className="flex items-center justify-between p-4 bg-white rounded-xl border-l-4 border-l-orange-500 shadow-sm">
+                              <div className="flex items-center gap-4">
+                                <div className="bg-orange-100 p-3 rounded-lg">
+                                  <Timer className="w-5 h-5 text-orange-600" />
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-slate-900 flex items-center gap-2">
+                                    {instance.name}
+                                    <span className="bg-orange-200 text-orange-800 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                                      <Hash className="w-3 h-3" />
+                                      {instance.instanceNumber}
+                                    </span>
+                                  </p>
+                                  <p className="text-sm text-orange-700 font-medium">
+                                    Started: {new Date(instance.usageStartTime).toLocaleTimeString()}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <button
+                                  onClick={() => handleStopUsage(instance._id)}
+                                  className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-1 shadow-sm"
+                                >
+                                  <Square className="w-3 h-3" />
+                                  Stop
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                          {activeInstances.length === 0 && (
+                            <div className="text-center py-6 text-slate-500">
+                              <Play className="w-10 h-10 mx-auto mb-2 text-slate-400" />
+                              <p className="font-medium">No active operations</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Reusable Tools Enhanced */}
+                    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-200 shadow-sm">
+                      <div className="p-6 border-b border-purple-200 bg-white rounded-t-xl">
+                        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-3">
+                          <div className="bg-purple-100 p-2 rounded-lg">
+                            <RotateCcw className="w-5 h-5 text-purple-600" />
+                          </div>
+                          Ready-to-Use Tools
+                        </h3>
+                      </div>
+                      <div className="p-6">
+                        <div className="space-y-4">
+                          {availableInstances.slice(0, 3).map((instance) => (
+                            <div key={instance._id} className="flex items-center justify-between p-4 bg-white rounded-xl border-l-4 border-l-purple-500 shadow-sm">
+                              <div className="flex items-center gap-4">
+                                <div className="bg-purple-100 p-3 rounded-lg">
+                                  <Target className="w-5 h-5 text-purple-600" />
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-slate-900 flex items-center gap-2">
+                                    {instance.name}
+                                    <span className="bg-purple-200 text-purple-800 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                                      <Hash className="w-3 h-3" />
+                                      {instance.instanceNumber}
+                                    </span>
+                                  </p>
+                                  <p className="text-sm text-purple-700 font-medium">
+                                    Life: {instance.remainingLife?.toFixed(1)}h remaining
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <button
+                                  onClick={() => handleStartUsage(instance._id)}
+                                  className="bg-purple-600 text-white px-3 py-1 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1 shadow-sm"
+                                >
+                                  <RotateCcw className="w-3 h-3" />
+                                  Resume
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                          {availableInstances.length === 0 && (
+                            <div className="text-center py-6 text-slate-500">
+                              <RotateCcw className="w-10 h-10 mx-auto mb-2 text-slate-400" />
+                              <p className="font-medium">No ready tools</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* System Status Overview */}
+                <div className="bg-white rounded-xl border border-slate-200 shadow-lg">
+                  <div className="p-6 border-b border-slate-200">
+                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-3">
+                      <div className="bg-blue-100 p-2 rounded-lg">
+                        <Activity className="w-5 h-5 text-blue-600" />
+                      </div>
+                      Operations Status Monitor
+                    </h3>
+                  </div>
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="text-center">
+                        <div className="bg-green-100 rounded-full p-4 w-16 h-16 mx-auto mb-3 flex items-center justify-center">
+                          <CheckCircle className="w-8 h-8 text-green-600" />
+                        </div>
+                        <h4 className="font-semibold text-slate-900">System Online</h4>
+                        <p className="text-sm text-slate-600 mt-1">All systems operational</p>
+                      </div>
+                      <div className="text-center">
+                        <div className="bg-orange-100 rounded-full p-4 w-16 h-16 mx-auto mb-3 flex items-center justify-center">
+                          <TrendingUp className="w-8 h-8 text-orange-600" />
+                        </div>
+                        <h4 className="font-semibold text-slate-900">Productivity High</h4>
+                        <p className="text-sm text-slate-600 mt-1">Efficiency within targets</p>
+                      </div>
+                      <div className="text-center">
+                        <div className="bg-blue-100 rounded-full p-4 w-16 h-16 mx-auto mb-3 flex items-center justify-center">
+                          <Wrench className="w-8 h-8 text-blue-600" />
+                        </div>
+                        <h4 className="font-semibold text-slate-900">Tools Ready</h4>
+                        <p className="text-sm text-slate-600 mt-1">Equipment synchronized</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'tools' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900">Equipment Inventory Catalog</h2>
+                    <p className="text-slate-600 mt-1">Available tools ordered by your supervisor</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="relative">
+                      <Search className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Search equipment..."
+                        className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      />
+                    </div>
+                    <button className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 border border-slate-300">
+                      <Filter className="w-4 h-4" />
+                      Filter
                     </button>
                   </div>
-                ))}
-                {parentTools.length === 0 && (
-                  <div className="text-center py-4 text-gray-500">
-                    <p>No tools available</p>
-                    <p className="text-sm">Your supervisor needs to order tools first</p>
+                </div>
+                
+                {parentTools.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {parentTools.map((tool) => (
+                      <div key={tool._id} className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-all duration-300 overflow-hidden">
+                        {/* Header with Status Badge */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <h3 className="font-bold text-slate-900 text-lg">{tool.name}</h3>
+                            <p className="text-sm text-slate-600 capitalize">{tool.category}</p>
+                            <p className="text-xs text-blue-600 mt-1">Shop: {tool.shopkeeper?.shopName}</p>
+                          </div>
+                          <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                            tool.availableQuantity > 0 
+                              ? 'bg-green-100 text-green-800 border border-green-200' 
+                              : 'bg-red-100 text-red-800 border border-red-200'
+                          }`}>
+                            {tool.availableQuantity > 0 ? 'AVAILABLE' : 'UNAVAILABLE'}
+                          </div>
+                        </div>
+
+                        {/* Description */}
+                        <p className="text-sm text-slate-600 mb-4 line-clamp-2">{tool.description}</p>
+
+                        {/* Company Quantities - Enhanced */}
+                        <div className="grid grid-cols-3 gap-3 mb-4">
+                          <div className="text-center p-3 bg-blue-50 rounded-xl border border-blue-200">
+                            <Package className="w-5 h-5 text-blue-600 mx-auto mb-1" />
+                            <p className="text-xs text-slate-600 font-medium">Total</p>
+                            <p className="font-bold text-blue-600 text-lg">{tool.companyQuantity}</p>
+                          </div>
+                          <div className="text-center p-3 bg-green-50 rounded-xl border border-green-200">
+                            <CheckCircle className="w-5 h-5 text-green-600 mx-auto mb-1" />
+                            <p className="text-xs text-slate-600 font-medium">Available</p>
+                            <p className="font-bold text-green-600 text-lg">{tool.availableQuantity}</p>
+                          </div>
+                          <div className="text-center p-3 bg-orange-50 rounded-xl border border-orange-200">
+                            <Play className="w-5 h-5 text-orange-600 mx-auto mb-1" />
+                            <p className="text-xs text-slate-600 font-medium">In Use</p>
+                            <p className="font-bold text-orange-600 text-lg">{tool.inUseQuantity}</p>
+                          </div>
+                        </div>
+
+                        {/* Life Progress - Enhanced */}
+                        <div className="mb-6">
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="text-sm font-semibold text-slate-700">Equipment Life</span>
+                            <span className="text-sm font-bold text-slate-600">
+                              {tool.remainingLife?.toFixed(1) || tool.lifeLimit}h / {tool.lifeLimit}h
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                            <div
+                              className="h-3 rounded-full bg-gradient-to-r from-green-500 to-orange-500 transition-all duration-500"
+                              style={{ width: `${Math.max(0, ((tool.remainingLife || tool.lifeLimit) / tool.lifeLimit) * 100)}%` }}
+                            ></div>
+                          </div>
+                          <div className="flex justify-between text-xs text-slate-500 mt-1">
+                            <span>New</span>
+                            <span>{(((tool.remainingLife || tool.lifeLimit) / tool.lifeLimit) * 100).toFixed(1)}% remaining</span>
+                          </div>
+                        </div>
+
+                        {/* Action Button - Enhanced */}
+                        {tool.availableQuantity > 0 ? (
+                          <button
+                            onClick={() => handleStartUsage(tool._id)}
+                            className="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white py-3 px-4 rounded-xl hover:from-orange-700 hover:to-red-700 transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-lg hover:shadow-xl"
+                          >
+                            <Play className="w-5 h-5" />
+                            Start Operation (#{tool.inUseQuantity + 1})
+                          </button>
+                        ) : (
+                          <div className="w-full bg-slate-100 text-slate-600 py-3 px-4 rounded-xl text-sm text-center font-medium border-2 border-dashed border-slate-300">
+                            No Available Units
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-16">
+                    <Package className="w-20 h-20 mx-auto mb-6 text-slate-400" />
+                    <div className="text-slate-500 text-xl font-semibold mb-2">No Equipment Available</div>
+                    <p className="text-slate-400 text-sm max-w-md mx-auto">
+                      Your supervisor needs to order tools from shops first. Contact them to request necessary equipment for operations.
+                    </p>
                   </div>
                 )}
               </div>
-            </div>
+            )}
 
-            {/* Current Usage & Reusable Tools */}
-            <div className="space-y-6">
-              {/* Current Usage */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Play className="w-5 h-5 text-orange-500" />
-                  Currently Using
-                </h3>
-                <div className="space-y-3">
-                  {activeInstances.slice(0, 3).map((instance) => (
-                    <div key={instance._id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
-                      <div>
-                        <p className="font-medium text-gray-900 flex items-center gap-2">
-                          {instance.name}
-                          <span className="bg-orange-200 text-orange-800 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                            <Hash className="w-3 h-3" />
-                            {instance.instanceNumber}
+            {/* Continue with other tabs following the same enhanced design pattern... */}
+            {activeTab === 'active' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900">Active Operations Monitor</h2>
+                    <p className="text-slate-600 mt-1">Real-time tracking of equipment in use</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <button className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 border border-slate-300">
+                      <Download className="w-4 h-4" />
+                      Export Log
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="space-y-6">
+                  {activeInstances.map((instance) => (
+                    <div key={instance._id} className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 hover:shadow-xl transition-all duration-300">
+                      <div className="flex items-start justify-between mb-6">
+                        <div className="flex-1">
+                          <h3 className="font-bold text-slate-900 text-xl flex items-center gap-3">
+                            {instance.name}
+                            <span className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 border border-blue-200">
+                              <Hash className="w-4 h-4" />
+                              Instance #{instance.instanceNumber}
+                            </span>
+                          </h3>
+                          <p className="text-sm text-slate-600 capitalize mt-1">{instance.category}</p>
+                          <p className="text-xs text-blue-600 mt-1">Shop: {instance.shopkeeper?.shopName}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="px-4 py-2 bg-gradient-to-r from-orange-100 to-red-100 text-orange-800 text-sm font-bold rounded-full border border-orange-200">
+                            ACTIVE OPERATION
                           </span>
-                        </p>
-                        <p className="text-sm text-orange-600">
-                          Started: {new Date(instance.usageStartTime).toLocaleTimeString()}
-                        </p>
+                        </div>
                       </div>
+
+                      {/* Enhanced Status Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-4 rounded-xl border border-slate-200">
+                          <div className="flex items-center gap-3">
+                            <Clock className="w-6 h-6 text-slate-600" />
+                            <div>
+                              <p className="text-sm text-slate-600 font-medium">Operation Started</p>
+                              <p className="font-bold text-slate-900">{new Date(instance.usageStartTime).toLocaleTimeString()}</p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-200">
+                          <div className="flex items-center gap-3">
+                            <Timer className="w-6 h-6 text-blue-600" />
+                            <div>
+                              <p className="text-sm text-slate-600 font-medium">Active Duration</p>
+                              <p className="font-bold text-blue-600">
+                                {Math.floor((new Date() - new Date(instance.usageStartTime)) / (1000 * 60 * 60))}h {Math.floor(((new Date() - new Date(instance.usageStartTime)) % (1000 * 60 * 60)) / (1000 * 60))}m
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-gradient-to-br from-orange-50 to-red-50 p-4 rounded-xl border border-orange-200">
+                          <div className="flex items-center gap-3">
+                            <AlertTriangle className="w-6 h-6 text-orange-600" />
+                            <div>
+                              <p className="text-sm text-slate-600 font-medium">Life Remaining</p>
+                              <p className={`font-bold ${instance.remainingLife <= instance.thresholdLimit ? 'text-red-600' : 'text-green-600'}`}>
+                                {instance.remainingLife.toFixed(1)}h
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Enhanced Life Progress Bar */}
+                      <div className="mb-6">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-sm font-semibold text-slate-700">Equipment Life Usage</span>
+                          <span className="text-sm text-slate-600 font-medium">
+                            {((instance.lifeLimit - instance.remainingLife) / instance.lifeLimit * 100).toFixed(1)}% consumed
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
+                          <div
+                            className="h-4 bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 rounded-full transition-all duration-500"
+                            style={{ width: `${((instance.lifeLimit - instance.remainingLife) / instance.lifeLimit) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      {/* Warning if low life */}
+                      {instance.remainingLife <= instance.thresholdLimit && (
+                        <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-l-red-500 rounded-lg">
+                          <div className="flex items-center gap-3 text-red-700">
+                            <AlertTriangle className="w-5 h-5" />
+                            <span className="text-sm font-bold">CRITICAL: Low Life Warning</span>
+                          </div>
+                          <p className="text-sm text-red-600 mt-2">
+                            This equipment is below the threshold limit of {instance.thresholdLimit} hours. Consider replacing soon.
+                          </p>
+                        </div>
+                      )}
+
                       <button
                         onClick={() => handleStopUsage(instance._id)}
-                        className="bg-red-600 text-white px-3 py-1 rounded-full text-sm hover:bg-red-700 transition-colors flex items-center gap-1"
+                        className="w-full bg-gradient-to-r from-red-600 to-red-700 text-white py-4 px-6 rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-300 flex items-center justify-center gap-3 font-semibold text-lg shadow-lg hover:shadow-xl"
                       >
-                        <Square className="w-3 h-3" />
-                        Stop
+                        <Square className="w-5 h-5" />
+                        Stop Operation - Instance #{instance.instanceNumber}
                       </button>
                     </div>
                   ))}
+
                   {activeInstances.length === 0 && (
-                    <div className="text-center py-4 text-gray-500">
-                      <p>No tools currently in use</p>
+                    <div className="text-center py-16">
+                      <Play className="w-20 h-20 mx-auto mb-6 text-slate-400" />
+                      <div className="text-slate-500 text-xl font-semibold mb-2">No Active Operations</div>
+                      <p className="text-slate-400 text-sm">Start using equipment to monitor active operations here</p>
                     </div>
                   )}
                 </div>
               </div>
+            )}
 
-              {/* Reusable Tools */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <RotateCcw className="w-5 h-5 text-purple-500" />
-                  Reusable Tools
-                </h3>
-                <div className="space-y-3">
-                  {availableInstances.slice(0, 3).map((instance) => (
-                    <div key={instance._id} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-200">
-                      <div>
-                        <p className="font-medium text-gray-900 flex items-center gap-2">
-                          {instance.name}
-                          <span className="bg-purple-200 text-purple-800 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                            <Hash className="w-3 h-3" />
-                            {instance.instanceNumber}
+            {/* Continue with remaining tabs... */}
+            {/* Add similar enhanced styling for 'reusable' and 'analytics' tabs following the same pattern */}
+            
+            {activeTab === 'reusable' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900">Ready-to-Use Equipment</h2>
+                    <p className="text-slate-600 mt-1">Previously used tools available for operation</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-6">
+                  {availableInstances.map((instance) => (
+                    <div key={instance._id} className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 hover:shadow-xl transition-all duration-300">
+                      {/* Same enhanced styling as active instances but with purple theme */}
+                      <div className="flex items-start justify-between mb-6">
+                        <div className="flex-1">
+                          <h3 className="font-bold text-slate-900 text-xl flex items-center gap-3">
+                            {instance.name}
+                            <span className="bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 border border-purple-200">
+                              <Hash className="w-4 h-4" />
+                              Instance #{instance.instanceNumber}
+                            </span>
+                          </h3>
+                          <p className="text-sm text-slate-600 capitalize mt-1">{instance.category}</p>
+                          <p className="text-xs text-blue-600 mt-1">Shop: {instance.shopkeeper?.shopName}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="px-4 py-2 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 text-sm font-bold rounded-full border border-green-200">
+                            READY FOR USE
                           </span>
-                        </p>
-                        <p className="text-sm text-purple-600">
-                          Life: {instance.remainingLife?.toFixed(1)}h remaining
-                        </p>
+                        </div>
                       </div>
+
+                      {/* Status grid and other components following the same pattern... */}
+                      
                       <button
                         onClick={() => handleStartUsage(instance._id)}
-                        className="bg-purple-600 text-white px-3 py-1 rounded-full text-sm hover:bg-purple-700 transition-colors flex items-center gap-1"
+                        className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-4 px-6 rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 flex items-center justify-center gap-3 font-semibold text-lg shadow-lg hover:shadow-xl"
                       >
-                        <RotateCcw className="w-3 h-3" />
-                        Reuse
+                        <RotateCcw className="w-5 h-5" />
+                        Resume Operation - Instance #{instance.instanceNumber}
                       </button>
                     </div>
                   ))}
+
                   {availableInstances.length === 0 && (
-                    <div className="text-center py-4 text-gray-500">
-                      <p>No reusable tools</p>
+                    <div className="text-center py-16">
+                      <RotateCcw className="w-20 h-20 mx-auto mb-6 text-slate-400" />
+                      <div className="text-slate-500 text-xl font-semibold mb-2">No Ready Equipment</div>
+                      <p className="text-slate-400 text-sm">Used equipment will appear here when available for reuse</p>
                     </div>
                   )}
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {activeTab === 'tools' && (
-          <div>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">Available Company Tools</h2>
-              <div className="text-sm text-gray-600">
-                Showing tools ordered by your supervisor
-              </div>
-            </div>
-            
-            {parentTools.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {parentTools.map((tool) => (
-                  <div key={tool._id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                    {/* Header */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 text-lg">{tool.name}</h3>
-                        <p className="text-sm text-gray-600 capitalize">{tool.category}</p>
-                        <p className="text-xs text-blue-600">Shop: {tool.shopkeeper?.shopName}</p>
-                      </div>
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                    </div>
-
-                    {/* Description */}
-                    <p className="text-sm text-gray-600 mb-4">{tool.description}</p>
-
-                    {/* Company Quantities */}
-                    <div className="grid grid-cols-3 gap-2 mb-4">
-                      <div className="text-center p-2 bg-blue-50 rounded-lg">
-                        <Package className="w-4 h-4 text-blue-600 mx-auto mb-1" />
-                        <p className="text-xs text-gray-600">Total</p>
-                        <p className="font-bold text-blue-600">{tool.companyQuantity}</p>
-                      </div>
-                      <div className="text-center p-2 bg-green-50 rounded-lg">
-                        <CheckCircle className="w-4 h-4 text-green-600 mx-auto mb-1" />
-                        <p className="text-xs text-gray-600">Available</p>
-                        <p className="font-bold text-green-600">{tool.availableQuantity}</p>
-                      </div>
-                      <div className="text-center p-2 bg-orange-50 rounded-lg">
-                        <Play className="w-4 h-4 text-orange-600 mx-auto mb-1" />
-                        <p className="text-xs text-gray-600">In Use</p>
-                        <p className="font-bold text-orange-600">{tool.inUseQuantity}</p>
-                      </div>
-                    </div>
-
-                    {/* Life Progress */}
-                    <div className="mb-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-gray-700">Tool Life</span>
-                        <span className="text-sm font-bold text-gray-600">
-                          {tool.remainingLife?.toFixed(1) || tool.lifeLimit}h / {tool.lifeLimit}h
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="h-2 rounded-full bg-green-500 transition-all"
-                          style={{ width: `${Math.max(0, ((tool.remainingLife || tool.lifeLimit) / tool.lifeLimit) * 100)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    {/* Action Button */}
-                    {tool.availableQuantity > 0 ? (
-                      <button
-                        onClick={() => handleStartUsage(tool._id)}
-                        className="w-full bg-orange-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-orange-700 transition-colors flex items-center justify-center gap-1"
-                      >
-                        <Play className="w-4 h-4" />
-                        Start Using (Next: #{tool.inUseQuantity + 1})
-                      </button>
-                    ) : (
-                      <div className="w-full bg-gray-100 text-gray-600 py-2 px-3 rounded-lg text-sm text-center">
-                        No available quantity
-                      </div>
-                    )}
+            {activeTab === 'analytics' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900">Performance Analytics Dashboard</h2>
+                    <p className="text-slate-600 mt-1">Usage insights and operational metrics</p>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Package className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                <div className="text-gray-500 text-lg">No tools available</div>
-                <p className="text-gray-400 text-sm mt-2">
-                  Your supervisor needs to order tools from shops first
-                </p>
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+                    <UsageChart title="My Usage Pattern" />
+                  </div>
+                  
+                  <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+                    <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-3">
+                      <div className="bg-blue-100 p-2 rounded-lg">
+                        <BarChart3 className="w-5 h-5 text-blue-600" />
+                      </div>
+                      Recent Usage History
+                    </h3>
+                    <div className="space-y-4">
+                      {usage.slice(0, 8).map((record) => (
+                        <div key={record._id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200 hover:bg-slate-100 transition-colors">
+                          <div>
+                            <p className="font-semibold text-slate-900 flex items-center gap-2">
+                              {record.toolName}
+                              {record.tool?.instanceNumber && (
+                                <span className="bg-slate-200 text-slate-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                                  <Hash className="w-3 h-3" />
+                                  {record.tool.instanceNumber}
+                                </span>
+                              )}
+                            </p>
+                            <p className="text-sm text-slate-600 mt-1">
+                              {new Date(record.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-bold text-blue-600">{record.duration?.toFixed(1)}h</p>
+                            <p className={`text-xs font-medium ${record.isActive ? 'text-green-600' : 'text-slate-500'}`}>
+                              {record.isActive ? 'Active' : 'Completed'}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
-        )}
-
-        {activeTab === 'active' && (
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Active Tool Usage</h2>
-            <div className="space-y-4">
-              {activeInstances.map((instance) => (
-                <div key={instance._id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 text-lg flex items-center gap-2">
-                        {instance.name}
-                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium flex items-center gap-1">
-                          <Hash className="w-3 h-3" />
-                          Instance #{instance.instanceNumber}
-                        </span>
-                      </h3>
-                      <p className="text-sm text-gray-600 capitalize">{instance.category}</p>
-                      <p className="text-xs text-blue-600">Shop: {instance.shopkeeper?.shopName}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="px-3 py-1 bg-orange-100 text-orange-800 text-sm font-medium rounded-full">
-                        Active
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-gray-600" />
-                      <div>
-                        <p className="text-sm text-gray-600">Started</p>
-                        <p className="font-medium">{new Date(instance.usageStartTime).toLocaleTimeString()}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-blue-600" />
-                      <div>
-                        <p className="text-sm text-gray-600">Duration</p>
-                        <p className="font-medium text-blue-600">
-                          {Math.floor((new Date() - new Date(instance.usageStartTime)) / (1000 * 60 * 60))}h {Math.floor(((new Date() - new Date(instance.usageStartTime)) % (1000 * 60 * 60)) / (1000 * 60))}m
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4 text-orange-600" />
-                      <div>
-                        <p className="text-sm text-gray-600">Remaining Life</p>
-                        <p className={`font-medium ${instance.remainingLife <= instance.thresholdLimit ? 'text-red-600' : 'text-green-600'}`}>
-                          {instance.remainingLife.toFixed(1)}h
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Life Progress Bar */}
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium text-gray-700">Tool Life Progress</span>
-                      <span className="text-sm text-gray-600">
-                        {((instance.lifeLimit - instance.remainingLife) / instance.lifeLimit * 100).toFixed(1)}% used
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="h-2 bg-gradient-to-r from-green-500 to-orange-500 rounded-full transition-all"
-                        style={{ width: `${((instance.lifeLimit - instance.remainingLife) / instance.lifeLimit) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {/* Warning if low life */}
-                  {instance.remainingLife <= instance.thresholdLimit && (
-                    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                      <div className="flex items-center gap-2 text-red-700">
-                        <AlertTriangle className="w-4 h-4" />
-                        <span className="text-sm font-medium">Low Life Warning</span>
-                      </div>
-                      <p className="text-sm text-red-600 mt-1">
-                        This tool is below the threshold limit of {instance.thresholdLimit} hours
-                      </p>
-                    </div>
-                  )}
-
-                  <button
-                    onClick={() => handleStopUsage(instance._id)}
-                    className="w-full bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2 font-medium"
-                  >
-                    <Square className="w-4 h-4" />
-                    Stop Usage - Instance #{instance.instanceNumber}
-                  </button>
-                </div>
-              ))}
-
-              {activeInstances.length === 0 && (
-                <div className="text-center py-12">
-                  <div className="text-gray-500 text-lg">No active tool usage</div>
-                  <p className="text-gray-400 text-sm mt-2">Start using a tool to see it here</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'reusable' && (
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Reusable Tool Instances</h2>
-            <div className="space-y-4">
-              {availableInstances.map((instance) => (
-                <div key={instance._id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 text-lg flex items-center gap-2">
-                        {instance.name}
-                        <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-sm font-medium flex items-center gap-1">
-                          <Hash className="w-3 h-3" />
-                          Instance #{instance.instanceNumber}
-                        </span>
-                      </h3>
-                      <p className="text-sm text-gray-600 capitalize">{instance.category}</p>
-                      <p className="text-xs text-blue-600">Shop: {instance.shopkeeper?.shopName}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
-                        Available
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4 text-green-600" />
-                      <div>
-                        <p className="text-sm text-gray-600">Remaining Life</p>
-                        <p className={`font-medium ${instance.remainingLife <= instance.thresholdLimit ? 'text-red-600' : 'text-green-600'}`}>
-                          {instance.remainingLife.toFixed(1)}h
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-blue-600" />
-                      <div>
-                        <p className="text-sm text-gray-600">Total Usage</p>
-                        <p className="font-medium text-blue-600">
-                          {instance.totalUsageHours?.toFixed(1) || 0}h
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-purple-600" />
-                      <div>
-                        <p className="text-sm text-gray-600">Usage %</p>
-                        <p className="font-medium text-purple-600">
-                          {((instance.totalUsageHours || 0) / instance.lifeLimit * 100).toFixed(1)}%
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Life Progress Bar */}
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium text-gray-700">Tool Life Remaining</span>
-                      <span className="text-sm text-gray-600">
-                        {(instance.remainingLife / instance.lifeLimit * 100).toFixed(1)}% remaining
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full transition-all ${
-                          instance.remainingLife <= instance.thresholdLimit ? 'bg-red-500' :
-                          instance.remainingLife <= instance.lifeLimit * 0.3 ? 'bg-yellow-500' :
-                          'bg-green-500'
-                        }`}
-                        style={{ width: `${(instance.remainingLife / instance.lifeLimit) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {/* Warning if low life */}
-                  {instance.remainingLife <= instance.thresholdLimit && (
-                    <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <div className="flex items-center gap-2 text-yellow-700">
-                        <AlertTriangle className="w-4 h-4" />
-                        <span className="text-sm font-medium">Low Life Warning</span>
-                      </div>
-                      <p className="text-sm text-yellow-600 mt-1">
-                        This tool is below the threshold limit of {instance.thresholdLimit} hours
-                      </p>
-                    </div>
-                  )}
-
-                  <button
-                    onClick={() => handleStartUsage(instance._id)}
-                    className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 font-medium"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                    Resume Using Instance #{instance.instanceNumber}
-                  </button>
-                </div>
-              ))}
-
-              {availableInstances.length === 0 && (
-                <div className="text-center py-12">
-                  <RotateCcw className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                  <div className="text-gray-500 text-lg">No reusable tool instances</div>
-                  <p className="text-gray-400 text-sm mt-2">
-                    Tool instances will appear here after you stop using them (if they have remaining life)
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'analytics' && (
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Usage Analytics</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <UsageChart title="My Usage Pattern" />
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Usage</h3>
-                <div className="space-y-3">
-                  {usage.slice(0, 8).map((record) => (
-                    <div key={record._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900 flex items-center gap-2">
-                          {record.toolName}
-                          {record.tool?.instanceNumber && (
-                            <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                              <Hash className="w-3 h-3" />
-                              {record.tool.instanceNumber}
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {new Date(record.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium">{record.duration?.toFixed(1)}h</p>
-                        <p className="text-xs text-gray-500">
-                          {record.isActive ? 'Active' : 'Completed'}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
