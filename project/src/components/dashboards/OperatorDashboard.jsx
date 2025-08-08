@@ -26,8 +26,8 @@ import {
 import StatsCard from '../common/StatsCard';
 import UsageChart from '../charts/UsageChart';
 
-const OperatorDashboard = () => {
-  const [activeTab, setActiveTab] = useState('overview');
+const OperatorDashboard = ({ defaultTab = 'overview' }) => {
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const [stats, setStats] = useState({});
   const [parentTools, setParentTools] = useState([]);
   const [activeInstances, setActiveInstances] = useState([]);
@@ -40,13 +40,20 @@ const OperatorDashboard = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (defaultTab && defaultTab !== activeTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
+
   const fetchData = async () => {
     try {
       setRefreshing(true);
+      const base = import.meta?.env?.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://tool-managemnt.onrender.com');
       const [statsRes, toolsRes, usageRes] = await Promise.all([
-        axios.get('https://tool-managemnt.onrender.com/api/dashboard/stats'),
-        axios.get('https://tool-managemnt.onrender.com/api/tools/operator-tools'),
-        axios.get('https://tool-managemnt.onrender.com/api/usage')
+        axios.get(`${base}/api/dashboard/stats`),
+        axios.get(`${base}/api/tools/operator-tools`),
+        axios.get(`${base}/api/usage`)
       ]);
 
       setStats(statsRes.data);
@@ -65,9 +72,12 @@ const OperatorDashboard = () => {
 
   const handleStartUsage = async (toolId) => {
     try {
-      const response = await axios.post(`https://tool-managemnt.onrender.com/api/tools/${toolId}/start-usage`);
+      const base = import.meta?.env?.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://tool-managemnt.onrender.com');
+      const response = await axios.post(`${base}/api/tools/${toolId}/start-usage`);
       alert(response.data.message);
-      fetchData(); // Refresh data
+      await fetchData(); // Refresh data
+      // Notify other UI (e.g., sidebar) to refresh active instances immediately
+      window.dispatchEvent(new Event('tools-active-changed'));
     } catch (error) {
       console.error('Error starting tool usage:', error);
       alert(error.response?.data?.message || 'Failed to start tool usage');
@@ -76,9 +86,12 @@ const OperatorDashboard = () => {
 
   const handleStopUsage = async (toolId) => {
     try {
-      const response = await axios.post(`https://tool-managemnt.onrender.com/api/tools/${toolId}/stop-usage`);
+      const base = import.meta?.env?.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://tool-managemnt.onrender.com');
+      const response = await axios.post(`${base}/api/tools/${toolId}/stop-usage`);
       alert(response.data.message);
-      fetchData(); // Refresh data
+      await fetchData(); // Refresh data
+      // Notify other UI (e.g., sidebar) to refresh active instances immediately
+      window.dispatchEvent(new Event('tools-active-changed'));
     } catch (error) {
       console.error('Error stopping tool usage:', error);
       alert(error.response?.data?.message || 'Failed to stop tool usage');

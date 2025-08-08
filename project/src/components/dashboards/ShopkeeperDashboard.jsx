@@ -26,8 +26,8 @@ import ToolForm from '../tools/ToolForm';
 import ToolsList from '../tools/ToolsList';
 import OrdersList from '../orders/OrdersList';
 
-const ShopkeeperDashboard = () => {
-  const [activeTab, setActiveTab] = useState('overview');
+const ShopkeeperDashboard = ({ defaultTab = 'overview' }) => {
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const [stats, setStats] = useState({});
   const [tools, setTools] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -39,13 +39,20 @@ const ShopkeeperDashboard = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (defaultTab && defaultTab !== activeTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
+
   const fetchData = async () => {
     try {
       setRefreshing(true);
+      const base = import.meta?.env?.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://tool-managemnt.onrender.com');
       const [statsRes, toolsRes, ordersRes] = await Promise.all([
-        axios.get('https://tool-managemnt.onrender.com/api/dashboard/stats'),
-        axios.get('https://tool-managemnt.onrender.com/api/tools'),
-        axios.get('https://tool-managemnt.onrender.com/api/orders')
+        axios.get(`${base}/api/dashboard/stats`),
+        axios.get(`${base}/api/tools`),
+        axios.get(`${base}/api/orders`)
       ]);
 
       setStats(statsRes.data);
@@ -61,7 +68,8 @@ const ShopkeeperDashboard = () => {
 
   const handleOrderStatusUpdate = async (orderId, status, notes = '') => {
     try {
-      await axios.put(`https://tool-managemnt.onrender.com/api/orders/${orderId}/status`, {
+      const base = import.meta?.env?.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://tool-managemnt.onrender.com');
+      await axios.put(`${base}/api/orders/${orderId}/status`, {
         status,
         notes
       });

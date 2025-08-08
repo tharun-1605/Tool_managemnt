@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 
@@ -17,75 +17,86 @@ export const NotificationProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (user) {
-      const newSocket = io('https://tool-managemnt.onrender.com', { transports: ['websocket'] });
-      setSocket(newSocket);
-
-      newSocket.emit('join-role', user.role);
-
-      // Listen for notifications based on user role
-      if (user.role === 'supervisor') {
-        newSocket.on('tool-threshold-alert', (data) => {
-          addNotification({
-            type: 'warning',
-            title: 'Tool Life Low',
-            message: `${data.tool} has ${data.remainingLife.toFixed(1)} hours remaining (threshold: ${data.thresholdLimit})`,
-            timestamp: new Date()
-          });
-        });
-
-        newSocket.on('order-status-update', (data) => {
-          addNotification({
-            type: 'info',
-            title: 'Order Update',
-            message: `Your order for ${data.tool} has been ${data.status}`,
-            timestamp: new Date()
-          });
-        });
-      }
-
-      if (user.role === 'shopkeeper') {
-        newSocket.on('new-order', (data) => {
-          addNotification({
-            type: 'info',
-            title: 'New Order',
-            message: `${data.supervisor} ordered ${data.quantity}x ${data.tool}`,
-            timestamp: new Date()
-          });
-        });
-      }
-
-      return () => {
-        newSocket.close();
-      };
+  const SOCKET_URL = useMemo(() => {
+    const envUrl = import.meta?.env?.VITE_SOCKET_URL;
+    if (envUrl) return envUrl;
+    // Fallbacks for dev and prod
+    if (typeof window !== 'undefined') {
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      return isLocal ? 'http://localhost:5000' : 'https://tool-managemnt.onrender.com';
     }
-  }, [user]);
+    return 'https://tool-managemnt.onrender.com';
+  }, []);
 
-  const addNotification = (notification) => {
+  useEffect(() => {
+    if (!user) return;
+    const newSocket = io(SOCKET_URL, { transports: ['websocket'] });
+    setSocket(newSocket);
+
+    newSocket.emit('join-role', user.role);
+
+    // Listen for notifications based on user role
+    if (user.role === 'supervisor') {
+      newSocket.on('tool-threshold-alert', (data) => {
+        addNotification({
+          type: 'warning',
+          title: 'Tool Life Low',
+          message: `${data.tool} has ${Number(data.remainingLife).toFixed(1)} hours remaining (threshold: ${data.thresholdLimit})`,
+          timestamp: new Date()
+        });
+      });
+
+      newSocket.on('order-status-update', (data) => {
+        addNotification({
+          type: 'info',
+          title: 'Order Update',
+          message: `Your order for ${data.tool} has been ${data.status}`,
+          timestamp: new Date()
+        });
+      });
+    }
+
+    if (user.role === 'shopkeeper') {
+      newSocket.on('new-order', (data) => {
+        addNotification({
+          type: 'info',
+          title: 'New Order',
+          message: `${data.supervisor} ordered ${data.quantity}x ${data.tool}`,
+          timestamp: new Date()
+        });
+      });
+    }
+
+    return () => {
+      newSocket.close();
+    };
+  }, [user, SOCKET_URL]);
+
+  const addNotification = useCallback((notification) => {
     const id = Date.now() + Math.random();
-    setNotifications(prev => [...prev, { ...notification, id }]);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-      removeNotification(id);
-    }, 5000);
-  };
+    setNotifications(prev => [...prev, { ...notification, id, read: false }]);
+  }, []);
 
-  const removeNotification = (id) => {
+  const removeNotification = useCallback((id) => {
     setNotifications(prev => prev.filter(notif => notif.id !== id));
-  };
+  }, []);
 
-  const clearAllNotifications = () => {
+  const clearAllNotifications = useCallback(() => {
     setNotifications([]);
-  };
+  }, []);
+
+  const markAsRead = useCallback((id) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  }, []);
 
   return (
     <NotificationContext.Provider value={{
       notifications,
       addNotification,
       removeNotification,
-      clearAllNotifications
+      clearAllNotifications,
+      markAsRead,
+      socket
     }}>
       {children}
     </NotificationContext.Provider>

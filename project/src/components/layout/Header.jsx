@@ -19,8 +19,9 @@ import { useNotifications } from '../../contexts/NotificationContext';
 
 const Header = () => {
   const { user, logout } = useAuth();
-  const { notifications } = useNotifications();
+  const { notifications, removeNotification, clearAllNotifications } = useNotifications();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
   const unreadCount = notifications.length;
@@ -171,17 +172,67 @@ const Header = () => {
               </button>
 
               {/* Enhanced Notifications */}
-              <button className="relative p-3 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors group">
-                <Bell className="w-5 h-5 group-hover:animate-bounce" />
-                {unreadCount > 0 && (
-                  <>
-                    <span className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-lg animate-pulse">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-400 rounded-full animate-ping opacity-20"></div>
-                  </>
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifMenu((v) => !v)}
+                  className="relative p-3 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors group"
+                >
+                  <Bell className="w-5 h-5 group-hover:animate-bounce" />
+                  {unreadCount > 0 && (
+                    <>
+                      <span className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-lg animate-pulse">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-400 rounded-full animate-ping opacity-20"></div>
+                    </>
+                  )}
+                </button>
+
+                {showNotifMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-96 max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-slate-200 z-50">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                      <div className="flex items-center gap-2">
+                        <Bell className="w-4 h-4 text-slate-500" />
+                        <span className="text-sm font-semibold text-slate-800">Notifications</span>
+                      </div>
+                      {notifications.length > 0 && (
+                        <button
+                          onClick={() => clearAllNotifications()}
+                          className="text-xs text-slate-500 hover:text-slate-700"
+                        >
+                          Clear all
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="max-h-96 overflow-auto">
+                      {notifications.length === 0 ? (
+                        <div className="px-4 py-8 text-center text-slate-500 text-sm">No notifications</div>
+                      ) : (
+                        notifications.slice(0, 8).map((n) => (
+                          <div key={n.id} className="px-4 py-3 border-b border-slate-100 last:border-b-0">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="text-sm font-semibold text-slate-900 truncate">{n.title}</div>
+                                <div className="text-sm text-slate-600 mt-1 break-words">{n.message}</div>
+                                <div className="text-xs text-slate-500 mt-1">
+                                  {n.timestamp ? new Date(n.timestamp).toLocaleString() : ''}
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => removeNotification(n.id)}
+                                className="text-xs text-slate-400 hover:text-slate-600"
+                              >
+                                Dismiss
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
                 )}
-              </button>
+              </div>
             </div>
 
             {/* Enhanced User Menu */}

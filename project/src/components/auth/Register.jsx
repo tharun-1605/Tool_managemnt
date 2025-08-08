@@ -41,7 +41,8 @@ const Register = () => {
 
   const fetchCompanies = async () => {
     try {
-      const response = await axios.get('https://tool-managemnt.onrender.com/api/auth/companies');
+      const base = import.meta?.env?.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://tool-managemnt.onrender.com');
+      const response = await axios.get(`${base}/api/auth/companies`);
       setCompanies(response.data);
     } catch (error) {
       console.error('Error fetching companies:', error);
@@ -50,7 +51,8 @@ const Register = () => {
 
   const fetchSupervisors = async (companyName) => {
     try {
-      const response = await axios.get(`https://tool-managemnt.onrender.com/api/auth/supervisors/${companyName}`);
+      const base = import.meta?.env?.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://tool-managemnt.onrender.com');
+      const response = await axios.get(`${base}/api/auth/supervisors/${companyName}`);
       setSupervisors(response.data);
     } catch (error) {
       console.error('Error fetching supervisors:', error);

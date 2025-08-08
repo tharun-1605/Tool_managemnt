@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
@@ -16,12 +16,22 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
 
+  const API_BASE_URL = useMemo(() => {
+    const envUrl = import.meta?.env?.VITE_API_URL;
+    if (envUrl) return envUrl;
+    if (typeof window !== 'undefined') {
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      return isLocal ? 'http://localhost:5000' : 'https://tool-managemnt.onrender.com';
+    }
+    return 'https://tool-managemnt.onrender.com';
+  }, []);
+
   useEffect(() => {
     const initAuth = async () => {
       if (token) {
         try {
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          const response = await axios.get('https://tool-managemnt.onrender.com/api/auth/me');
+          const response = await axios.get(`${API_BASE_URL}/api/auth/me`);
           setUser(response.data.user);
         } catch (error) {
           localStorage.removeItem('token');
@@ -33,11 +43,11 @@ export const AuthProvider = ({ children }) => {
     };
 
     initAuth();
-  }, [token]);
+  }, [token, API_BASE_URL]);
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('https://tool-managemnt.onrender.com/api/auth/login', {
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, {
         email,
         password
       });
@@ -60,7 +70,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await axios.post('https://tool-managemnt.onrender.com/api/auth/register', userData);
+      const response = await axios.post(`${API_BASE_URL}/api/auth/register`, userData);
       
       const { token: newToken, user: newUser } = response.data;
       
@@ -90,7 +100,8 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     register,
-    logout
+    logout,
+    API_BASE_URL
   };
 
   return (

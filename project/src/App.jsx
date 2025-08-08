@@ -41,14 +41,23 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 const AppContent = () => {
   const { user } = useAuth();
 
-  const getDashboardComponent = () => {
+  const getDashboardComponent = (tab = 'overview') => {
     switch (user?.role) {
       case 'shopkeeper':
-        return <ShopkeeperDashboard />;
-      case 'supervisor':
-        return <SupervisorDashboard />;
+        return <ShopkeeperDashboard defaultTab={tab} />;
+      case 'supervisor': {
+        // Map generic tabs to supervisor-specific ids
+        const map = {
+          overview: 'overview',
+          tools: 'shops',
+          orders: 'orders',
+          monitor: 'monitor',
+          analytics: 'analytics'
+        };
+        return <SupervisorDashboard defaultTab={map[tab] || 'overview'} />;
+      }
       case 'operator':
-        return <OperatorDashboard />;
+        return <OperatorDashboard defaultTab={tab} />;
       default:
         return <Navigate to="/login" replace />;
     }
@@ -62,7 +71,47 @@ const AppContent = () => {
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <Layout>
-            {getDashboardComponent()}
+            {getDashboardComponent('overview')}
+          </Layout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/tools" element={
+        <ProtectedRoute>
+          <Layout>
+            {getDashboardComponent('tools')}
+          </Layout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/orders" element={
+        <ProtectedRoute>
+          <Layout>
+            {getDashboardComponent('orders')}
+          </Layout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/analytics" element={
+        <ProtectedRoute>
+          <Layout>
+            {getDashboardComponent('analytics')}
+          </Layout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/monitor" element={
+        <ProtectedRoute>
+          <Layout>
+            {getDashboardComponent('monitor')}
+          </Layout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/active" element={
+        <ProtectedRoute>
+          <Layout>
+            {getDashboardComponent('active')}
           </Layout>
         </ProtectedRoute>
       } />

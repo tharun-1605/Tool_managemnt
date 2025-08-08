@@ -38,7 +38,8 @@ const ToolsList = ({ tools, onUpdate, userRole }) => {
     if (window.confirm('Are you sure you want to delete this tool? This action cannot be undone.')) {
       try {
         setDeletingToolId(toolId);
-        await axios.delete(`https://tool-managemnt.onrender.com/api/tools/${toolId}`);
+        const base = import.meta?.env?.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://tool-managemnt.onrender.com');
+        await axios.delete(`${base}/api/tools/${toolId}`);
         onUpdate();
       } catch (error) {
         alert(error.response?.data?.message || 'Failed to delete tool');

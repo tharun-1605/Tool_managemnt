@@ -5,4 +5,10 @@ export default {
     extend: {},
   },
   plugins: [],
+  safelist: [
+    // Dynamic classes constructed in code (e.g., text-green-600)
+    { pattern: /(bg|text|border|shadow)-(green|red|yellow|purple|blue|orange|slate)-(50|100|200|300|400|500|600|700|800|900)/ },
+    { pattern: /from-(green|red|yellow|purple|blue|orange|slate)-(50|100|200|300|400|500|600|700|800|900)/ },
+    { pattern: /to-(green|red|yellow|purple|blue|orange|slate)-(50|100|200|300|400|500|600|700|800|900)/ }
+  ]
 };

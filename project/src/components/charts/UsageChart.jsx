@@ -25,7 +25,8 @@ const UsageChart = ({ title = "Usage Analytics" }) => {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`https://tool-managemnt.onrender.com/api/usage/analytics?period=${period}`);
+      const base = import.meta?.env?.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://tool-managemnt.onrender.com');
+      const response = await axios.get(`${base}/api/usage/analytics?period=${period}`);
       setData(response.data);
     } catch (error) {
       console.error('Error fetching analytics:', error);

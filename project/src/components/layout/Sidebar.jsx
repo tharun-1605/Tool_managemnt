@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Home, 
@@ -30,6 +31,8 @@ import {
 
 const Sidebar = ({ onClose }) => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [activeInstances, setActiveInstances] = useState([]);
   const [loading, setLoading] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
@@ -50,13 +53,23 @@ const Sidebar = ({ onClose }) => {
       checkActiveInstances();
       // Check every 30 seconds for active instances
       const interval = setInterval(checkActiveInstances, 30000);
-      return () => clearInterval(interval);
+      // Also listen for immediate updates from other parts of the app (e.g., OperatorDashboard)
+      const onToolsChanged = () => {
+        checkActiveInstances();
+      };
+      window.addEventListener('tools-active-changed', onToolsChanged);
+
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('tools-active-changed', onToolsChanged);
+      };
     }
   }, [user]);
 
   const checkActiveInstances = async () => {
     try {
-      const response = await axios.get('https://tool-managemnt.onrender.com/api/tools/operator-tools');
+      const base = import.meta?.env?.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://tool-managemnt.onrender.com');
+      const response = await axios.get(`${base}/api/tools/operator-tools`);
       setActiveInstances(response.data.activeInstances || []);
     } catch (error) {
       console.error('Error checking active instances:', error);
@@ -93,8 +106,8 @@ const Sidebar = ({ onClose }) => {
           title: 'Overview',
           icon: Home,
           items: [
-            { icon: BarChart3, label: 'Dashboard', href: '#', active: true },
-            { icon: TrendingUp, label: 'Analytics', href: '#' }
+            { icon: BarChart3, label: 'Dashboard', path: '/dashboard', active: location.pathname === '/dashboard' },
+            { icon: TrendingUp, label: 'Analytics', path: '/analytics' }
           ]
         },
         {
@@ -102,9 +115,9 @@ const Sidebar = ({ onClose }) => {
           title: 'Inventory Management',
           icon: Package,
           items: [
-            { icon: Wrench, label: 'Manage Tools', href: '#' },
-            { icon: ShoppingCart, label: 'Orders', href: '#' },
-            { icon: Activity, label: 'Tool Status', href: '#' }
+            { icon: Wrench, label: 'Manage Tools', path: '/tools' },
+            { icon: ShoppingCart, label: 'Orders', path: '/orders' },
+            { icon: Activity, label: 'Tool Status', path: '/tools' }
           ]
         }
       );
@@ -117,8 +130,8 @@ const Sidebar = ({ onClose }) => {
           title: 'Command Center',
           icon: Shield,
           items: [
-            { icon: Home, label: 'Dashboard', href: '#', active: true },
-            { icon: BarChart3, label: 'Reports', href: '#' }
+            { icon: Home, label: 'Dashboard', path: '/dashboard', active: location.pathname === '/dashboard' },
+            { icon: BarChart3, label: 'Reports', path: '/analytics' }
           ]
         },
         {
@@ -126,10 +139,10 @@ const Sidebar = ({ onClose }) => {
           title: 'Operations',
           icon: Building,
           items: [
-            { icon: Store, label: 'All Shops', href: '#' },
-            { icon: ShoppingCart, label: 'My Orders', href: '#' },
-            { icon: Eye, label: 'Tool Monitor', href: '#' },
-            { icon: Users, label: 'Team Management', href: '#' }
+            { icon: Store, label: 'All Shops', path: '/tools' },
+            { icon: ShoppingCart, label: 'My Orders', path: '/orders' },
+            { icon: Eye, label: 'Tool Monitor', path: '/tools' },
+            { icon: Users, label: 'Team Management', path: '/tools' }
           ]
         }
       );
@@ -142,9 +155,9 @@ const Sidebar = ({ onClose }) => {
           title: 'Operations',
           icon: Activity,
           items: [
-            { icon: Home, label: 'Dashboard', href: '#', active: true },
-            { icon: Wrench, label: 'Available Tools', href: '#' },
-            { icon: Play, label: 'Active Usage', href: '#', badge: activeInstances.length }
+            { icon: Home, label: 'Dashboard', path: '/dashboard', active: location.pathname === '/dashboard' },
+            { icon: Wrench, label: 'Available Tools', path: '/tools' },
+            { icon: Play, label: 'Active Usage', path: '/tools', badge: activeInstances.length }
           ]
         },
         {
@@ -152,8 +165,8 @@ const Sidebar = ({ onClose }) => {
           title: 'Performance',
           icon: Target,
           items: [
-            { icon: BarChart3, label: 'My Usage', href: '#' },
-            { icon: TrendingUp, label: 'Performance', href: '#' }
+            { icon: BarChart3, label: 'My Usage', path: '/analytics' },
+            { icon: TrendingUp, label: 'Performance', path: '/analytics' }
           ]
         }
       );
@@ -330,26 +343,29 @@ const Sidebar = ({ onClose }) => {
                       {section.items.map((item, itemIndex) => {
                         const ItemIcon = item.icon;
                         return (
-                          <a
-                            key={itemIndex}
-                            href={item.href}
-                            onClick={onClose}
-                            className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group ${
-                              item.active 
-                                ? `bg-gradient-to-r ${roleConfig.accent} text-white shadow-lg` 
-                                : 'text-white/70 hover:text-white hover:bg-white/10'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <ItemIcon className={`w-4 h-4 ${item.active ? 'text-white' : 'text-white/60 group-hover:text-white'}`} />
-                              <span className="font-medium text-sm">{item.label}</span>
-                            </div>
-                            {item.badge && item.badge > 0 && (
-                              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold min-w-[1.25rem] text-center">
-                                {item.badge}
-                              </span>
-                            )}
-                          </a>
+                  <button
+                    key={itemIndex}
+                    onClick={(e) => {
+                      e.preventDefault();
+                          if (onClose) onClose();
+                          navigate(item.path || '/dashboard');
+                    }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group ${
+                      item.active 
+                        ? `bg-gradient-to-r ${roleConfig.accent} text-white shadow-lg` 
+                        : 'text-white/70 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <ItemIcon className={`w-4 h-4 ${item.active ? 'text-white' : 'text-white/60 group-hover:text-white'}`} />
+                      <span className="font-medium text-sm">{item.label}</span>
+                    </div>
+                    {item.badge && item.badge > 0 && (
+                      <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold min-w-[1.25rem] text-center">
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
                         );
                       })}
                     </div>
@@ -365,10 +381,13 @@ const Sidebar = ({ onClose }) => {
                 {section.items.map((item, itemIndex) => {
                   const ItemIcon = item.icon;
                   return (
-                    <a
+                    <button
                       key={itemIndex}
-                      href={item.href}
-                      onClick={onClose}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (onClose) onClose();
+                        navigate(item.path || '/dashboard');
+                      }}
                       className={`relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 group ${
                         item.active 
                           ? `bg-gradient-to-r ${roleConfig.accent} text-white shadow-lg` 
@@ -382,7 +401,7 @@ const Sidebar = ({ onClose }) => {
                           {item.badge}
                         </span>
                       )}
-                    </a>
+                    </button>
                   );
                 })}
               </div>
