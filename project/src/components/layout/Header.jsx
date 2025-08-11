@@ -91,7 +91,7 @@ const Header = () => {
   return (
     <header className="bg-white shadow-lg border-b border-slate-200">
       {/* Top Status Bar */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-900 px-6 py-2">
+      <div className="bg-gradient-to-r from-slate-800 to-slate-900 px-4 sm:px-6 py-2">
         <div className="flex items-center justify-between text-white">
           <div className="flex items-center gap-6 text-sm">
             <div className="flex items-center gap-2">
@@ -111,7 +111,7 @@ const Header = () => {
       </div>
 
       {/* Main Header */}
-      <div className="px-6 py-4">
+      <div className="px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Left Section - Title & User Info */}
           <div className="flex items-center gap-4">
@@ -138,7 +138,7 @@ const Header = () => {
           </div>
 
           {/* Right Section - Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap justify-end">
             {/* Enhanced Search Bar */}
             <form onSubmit={handleSearch} className="relative hidden lg:block">
               <div className="flex items-center">
@@ -255,7 +255,7 @@ const Header = () => {
 
               {/* User Dropdown Menu */}
               {showUserMenu && (
-                <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 py-2 z-50">
+                <div className="absolute right-0 top-full mt-2 w-72 max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-slate-200 py-2 z-50">
                   <div className="px-4 py-3 border-b border-slate-100">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 bg-gradient-to-r ${roleConfig.bgColor} rounded-lg flex items-center justify-center`}>
@@ -296,7 +296,7 @@ const Header = () => {
       </div>
 
       {/* Mobile Search Bar */}
-      <div className="lg:hidden px-6 pb-4">
+      <div className="lg:hidden px-4 sm:px-6 pb-4">
         <form onSubmit={handleSearch} className="relative">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
           <input

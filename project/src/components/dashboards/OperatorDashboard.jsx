@@ -124,7 +124,7 @@ const OperatorDashboard = ({ defaultTab = 'overview' }) => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header Section */}
       <div className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="bg-gradient-to-r from-orange-600 to-red-600 p-3 rounded-xl shadow-lg">
@@ -155,7 +155,7 @@ const OperatorDashboard = ({ defaultTab = 'overview' }) => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-all duration-300">
@@ -234,14 +234,14 @@ const OperatorDashboard = ({ defaultTab = 'overview' }) => {
         {/* Enhanced Navigation Tabs */}
         <div className="bg-white rounded-2xl shadow-lg border border-slate-200 mb-8 overflow-hidden">
           <div className="border-b border-slate-200 bg-slate-50">
-            <nav className="flex">
+            <nav className="flex overflow-x-auto no-scrollbar">
               {tabs.map((tab, index) => {
                 const IconComponent = tab.icon;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 flex flex-col items-center gap-3 py-6 px-6 font-medium text-sm transition-all duration-300 relative ${
+                    className={`min-w-[12rem] shrink-0 flex flex-col items-center gap-3 py-6 px-6 font-medium text-sm transition-all duration-300 relative ${
                       activeTab === tab.id
                         ? 'bg-white text-orange-600 shadow-sm border-b-2 border-orange-600'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -481,13 +481,13 @@ const OperatorDashboard = ({ defaultTab = 'overview' }) => {
                     <h2 className="text-2xl font-bold text-slate-900">Equipment Inventory Catalog</h2>
                     <p className="text-slate-600 mt-1">Available tools ordered by your supervisor</p>
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 flex-wrap">
                     <div className="relative">
                       <Search className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                       <input
                         type="text"
                         placeholder="Search equipment..."
-                        className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent w-full md:w-auto"
                       />
                     </div>
                     <button className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 border border-slate-300">
