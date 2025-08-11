@@ -15,6 +15,7 @@ import {
 const Layout = ({ children }) => {
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isSidebarMinimized, setIsSidebarMinimized] = useState(false);
   const [currentPath, setCurrentPath] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -118,11 +119,15 @@ const Layout = ({ children }) => {
       <div className={`fixed inset-y-0 left-0 z-50 transition-transform duration-300 ease-in-out ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } lg:translate-x-0`}>
-        <Sidebar onClose={() => setSidebarOpen(false)} />
+        <Sidebar 
+          onClose={() => setSidebarOpen(false)} 
+          isMinimized={isSidebarMinimized}
+          setIsMinimized={setIsSidebarMinimized}
+        />
       </div>
 
       {/* Main Content Area */}
-      <div className="lg:ml-72 transition-all duration-300">
+      <div className={`transition-all duration-300 ${isSidebarMinimized ? 'lg:ml-20' : 'lg:ml-72'}`}>
         {/* Mobile Header with Menu Toggle */}
         <div className="lg:hidden bg-white shadow-sm border-b border-slate-200 p-4">
           <div className="flex items-center justify-between">

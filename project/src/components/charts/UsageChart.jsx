@@ -269,77 +269,44 @@ const UsageChart = ({ title = "Usage Analytics" }) => {
             </div>
 
             {/* Enhanced Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t border-slate-200">
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-200">
-                <div className="flex items-center gap-3">
-                  <div className="bg-blue-100 p-2 rounded-lg">
-                    <Target className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-600 font-medium">Total Sessions</p>
-                    <p className="text-2xl font-bold text-blue-600">{totalSessions}</p>
-                  </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
+              <div className="flex flex-col items-center justify-center bg-blue-50 px-8 py-4 rounded-full border border-blue-100">
+                <div className="bg-blue-100 p-2 rounded-full mb-2">
+                  <Target className="w-6 h-6 text-blue-600" />
                 </div>
+                <p className="text-xs text-slate-500 font-medium mb-1">Total Sessions</p>
+                <p className="text-3xl font-bold text-blue-600">{totalSessions}</p>
               </div>
-
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl border border-green-200">
-                <div className="flex items-center gap-3">
-                  <div className="bg-green-100 p-2 rounded-lg">
-                    <Clock className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-600 font-medium">Total Hours</p>
-                    <p className="text-2xl font-bold text-green-600">{totalHours.toFixed(1)}h</p>
-                  </div>
+              <div className="flex flex-col items-center justify-center bg-green-50 px-8 py-4 rounded-full border border-green-100">
+                <div className="bg-green-100 p-2 rounded-full mb-2">
+                  <Clock className="w-6 h-6 text-green-600" />
                 </div>
+                <p className="text-xs text-slate-500 font-medium mb-1">Total Hours</p>
+                <p className="text-3xl font-bold text-green-600">{totalHours.toFixed(1)}h</p>
               </div>
-
-              <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-xl border border-orange-200">
-                <div className="flex items-center gap-3">
-                  <div className="bg-orange-100 p-2 rounded-lg">
-                    <Zap className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-600 font-medium">Avg Daily</p>
-                    <p className="text-2xl font-bold text-orange-600">{avgDaily}h</p>
-                  </div>
+              <div className="flex flex-col items-center justify-center bg-orange-50 px-8 py-4 rounded-full border border-orange-100">
+                <div className="bg-orange-100 p-2 rounded-full mb-2">
+                  <Zap className="w-6 h-6 text-orange-600" />
                 </div>
+                <p className="text-xs text-slate-500 font-medium mb-1">Avg Daily</p>
+                <p className="text-3xl font-bold text-orange-600">{avgDaily}h</p>
+              </div>
+              <div className="flex flex-col items-center justify-center bg-slate-50 px-8 py-4 rounded-full border border-slate-100">
+                <div className="bg-slate-200 p-2 rounded-full mb-2">
+                  <TrendingUp className="w-6 h-6 text-slate-600" />
+                </div>
+                <p className="text-xs text-slate-500 font-medium mb-1">Performance Trend</p>
+                <p className="text-xs text-slate-400 mb-1">Based on recent activity</p>
+                <span className="text-2xl font-bold text-red-600">{(() => {
+                  const recent = data.slice(-2);
+                  if (recent.length >= 2) {
+                    const change = ((recent[1].totalDuration - recent[0].totalDuration) / recent[0].totalDuration) * 100;
+                    return `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`;
+                  }
+                  return 'N/A';
+                })()}</span>
               </div>
             </div>
-
-            {/* Performance Insights */}
-            {data.length > 1 && (
-              <div className="mt-6 p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-slate-200 p-2 rounded-lg">
-                      <TrendingUp className="w-5 h-5 text-slate-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">Performance Trend</p>
-                      <p className="text-xs text-slate-600">Based on recent activity</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    {(() => {
-                      const recent = data.slice(-2);
-                      if (recent.length >= 2) {
-                        const change = ((recent[1].totalDuration - recent.totalDuration) / recent.totalDuration) * 100;
-                        return (
-                          <div className={`flex items-center gap-1 ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            <span className="text-sm font-bold">
-                              {change >= 0 ? '+' : ''}{change.toFixed(1)}%
-                            </span>
-                            <TrendingUp className={`w-4 h-4 ${change < 0 ? 'rotate-180' : ''}`} />
-                          </div>
-                        );
-                      }
-                      return <span className="text-sm text-slate-500">N/A</span>;
-                    })()}
-                  </div>
-                </div>
-              </div>
-            )}
           </>
         ) : (
           <div className="h-80 flex items-center justify-center">

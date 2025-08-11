@@ -780,7 +780,7 @@ const OperatorDashboard = ({ defaultTab = 'overview' }) => {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                   <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
                     <UsageChart title="My Usage Pattern" />
                   </div>

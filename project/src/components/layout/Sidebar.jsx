@@ -29,7 +29,7 @@ import {
   Package
 } from 'lucide-react';
 
-const Sidebar = ({ onClose }) => {
+const Sidebar = ({ onClose, isMinimized, setIsMinimized }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -37,7 +37,6 @@ const Sidebar = ({ onClose }) => {
   const [loading, setLoading] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [isMinimized, setIsMinimized] = useState(false);
 
   // Update time every minute
   useEffect(() => {
