@@ -792,8 +792,8 @@ const OperatorDashboard = ({ defaultTab = 'overview' }) => {
                       </div>
                       Recent Usage History
                     </h3>
-                    <div className="space-y-4">
-                      {usage.slice(0, 8).map((record) => (
+                    <div className="space-y-4 max-h-[520px] overflow-y-auto pr-1">
+                      {usage.map((record) => (
                         <div key={record._id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200 hover:bg-slate-100 transition-colors">
                           <div>
                             <p className="font-semibold text-slate-900 flex items-center gap-2">

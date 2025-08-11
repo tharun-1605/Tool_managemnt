@@ -1194,13 +1194,15 @@ const SupervisorDashboard = () => {
 
                 
 
-                <div className="p-8 space-y-8">
+                <div className="p-8">
 
                   {analytics.detailedUsage && Object.keys(analytics.detailedUsage).length > 0 ? (
 
-                    Object.entries(analytics.detailedUsage).map(([toolId, toolData]) => (
+                    <div className="space-y-8 max-h-[600px] overflow-y-auto pr-1">
 
-                      <div key={toolId} className="bg-gray-50 rounded-2xl p-8 border border-gray-200">
+                      {Object.entries(analytics.detailedUsage).map(([toolId, toolData]) => (
+
+                        <div key={toolId} className="bg-gray-50 rounded-2xl p-8 border border-gray-200">
 
                         <h4 className="font-bold text-gray-900 text-xl mb-6 flex items-center gap-3">
 
@@ -1314,9 +1316,11 @@ const SupervisorDashboard = () => {
 
                         </div>
 
-                      </div>
+                        </div>
 
-                    ))
+                      ))}
+
+                    </div>
 
                   ) : (
 

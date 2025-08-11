@@ -227,7 +227,7 @@ const ActiveUsageList = ({ tools, onStopUsage }) => {
         </div>
       </div>
 
-      {/* Tools List */}
+      {/* Tools List with Fixed Height and Scrollable Content */}
       {filteredAndSortedTools.length === 0 ? (
         <div className="text-center py-16">
           <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-12">
@@ -255,176 +255,192 @@ const ActiveUsageList = ({ tools, onStopUsage }) => {
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
-          {filteredAndSortedTools.map((tool) => {
-            const duration = calculateUsageDuration(tool.usageStartTime);
-            const lifeConfig = getLifeConfig(tool);
-            const usedPercentage = ((tool.lifeLimit - tool.remainingLife) / tool.lifeLimit) * 100;
-            const remainingPercentage = (tool.remainingLife / tool.lifeLimit) * 100;
-
-            return (
-              <div 
-                key={tool._id} 
-                className={`bg-gradient-to-br ${lifeConfig.cardBg} rounded-2xl shadow-lg border ${lifeConfig.cardBorder} p-6 hover:shadow-xl transition-all duration-300`}
-              >
-                {/* Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-bold text-slate-900 text-xl">{tool.name}</h3>
-                      {tool.instanceNumber && (
-                        <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
-                          <Hash className="w-3 h-3" />
-                          Instance #{tool.instanceNumber}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-4 text-sm">
-                      <span className="bg-white/60 backdrop-blur-sm px-3 py-1 rounded-full font-medium text-slate-700 capitalize">
-                        {tool.category}
-                      </span>
-                      {tool.shopkeeper?.shopId && (
-                        <div className="flex items-center gap-1 text-blue-600">
-                          <Building className="w-3 h-3" />
-                          <span>Shop: {tool.shopkeeper.shopId}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <span className="px-4 py-2 bg-gradient-to-r from-orange-100 to-red-100 text-orange-800 text-sm font-bold rounded-xl border border-orange-200 flex items-center gap-2">
-                      <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-                      ACTIVE
-                    </span>
-                    <p className="text-xs text-slate-500 mt-1">Real-time monitoring</p>
-                  </div>
-                </div>
-
-                {/* Enhanced Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div className="bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-white/20">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-slate-100 p-2 rounded-lg">
-                        <Play className="w-5 h-5 text-slate-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-slate-600 font-medium">Started</p>
-                        <p className="font-bold text-slate-900">{new Date(tool.usageStartTime).toLocaleTimeString()}</p>
-                        <p className="text-xs text-slate-500">{new Date(tool.usageStartTime).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-white/20">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-blue-100 p-2 rounded-lg">
-                        <Timer className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-slate-600 font-medium">Duration</p>
-                        <p className="font-bold text-blue-700 text-lg">{duration.display}</p>
-                        <p className="text-xs text-blue-600">{duration.totalHours.toFixed(2)} hours</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-white/20">
-                    <div className="flex items-center gap-3">
-                      <div className={`${lifeConfig.status === 'critical' ? 'bg-red-100' : lifeConfig.status === 'warning' ? 'bg-yellow-100' : 'bg-green-100'} p-2 rounded-lg`}>
-                        <Target className={`w-5 h-5 ${lifeConfig.color}`} />
-                      </div>
-                      <div>
-                        <p className="text-sm text-slate-600 font-medium">Remaining Life</p>
-                        <p className={`font-bold text-lg ${lifeConfig.color}`}>
-                          {tool.remainingLife.toFixed(1)}h
-                        </p>
-                        <p className="text-xs text-slate-500">of {tool.lifeLimit}h total</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Enhanced Life Progress Bar */}
-                <div className="mb-6">
-                  <div className="bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="text-sm font-bold text-slate-700">Equipment Life Status</span>
-                      <div className="text-right">
-                        <span className="text-sm font-bold text-slate-600">
-                          {usedPercentage.toFixed(1)}% utilized
-                        </span>
-                        <p className="text-xs text-slate-500">
-                          {remainingPercentage.toFixed(1)}% remaining
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
-                      <div
-                        className={`h-4 rounded-full bg-gradient-to-r ${lifeConfig.bgColor} transition-all duration-500 relative`}
-                        style={{ width: `${Math.max(5, usedPercentage)}%` }}
-                      >
-                        <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between text-xs text-slate-600 mt-2">
-                      <span>0h (Start)</span>
-                      <span className="font-medium">Current: {(tool.lifeLimit - tool.remainingLife).toFixed(1)}h</span>
-                      <span>{tool.lifeLimit}h (End)</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Critical Warning */}
-                {tool.remainingLife <= tool.thresholdLimit && (
-                  <div className="mb-6 bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-xl p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="bg-red-100 p-2 rounded-lg">
-                        <AlertTriangle className="w-5 h-5 text-red-600" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-red-800">Critical Life Alert</h4>
-                        <p className="text-red-700 text-sm">Immediate attention required</p>
-                      </div>
-                    </div>
-                    <div className="bg-red-100/50 rounded-lg p-3 mt-3">
-                      <p className="text-sm text-red-700 font-medium">
-                        ⚠️ Tool life is below threshold limit of {tool.thresholdLimit} hours. 
-                        Consider stopping usage and scheduling replacement.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Enhanced Stop Button */}
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => onStopUsage(tool._id)}
-                    className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white py-4 px-6 rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-200 flex items-center justify-center gap-3 font-bold text-lg shadow-lg hover:shadow-xl"
-                  >
-                    <Square className="w-5 h-5" />
-                    Stop Operation
-                    {tool.instanceNumber && <span className="text-red-200">#{tool.instanceNumber}</span>}
-                  </button>
-                  
-                  <button
-                    className="px-4 py-4 bg-white/60 hover:bg-white/80 text-slate-700 rounded-xl transition-colors border border-white/40"
-                    title="Refresh data"
-                  >
-                    <RefreshCw className="w-5 h-5" />
-                  </button>
-                </div>
-
-                {/* Live Status Indicator */}
-                <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span>Live monitoring • Updated {currentTime.toLocaleTimeString()}</span>
-                </div>
+        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+          {/* Fixed Header */}
+          <div className="p-6 border-b border-slate-200 bg-slate-50">
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-3">
+              <div className="bg-orange-100 p-2 rounded-lg">
+                <Activity className="w-5 h-5 text-orange-600" />
               </div>
-            );
-          })}
+              Active Operations Monitor
+            </h3>
+            <p className="text-slate-600 mt-1">Real-time tracking of equipment in use</p>
+          </div>
+          
+          {/* Scrollable Content with Fixed Height */}
+          <div className="max-h-[600px] overflow-y-auto">
+            <div className="p-6 space-y-4">
+              {filteredAndSortedTools.map((tool) => {
+                const duration = calculateUsageDuration(tool.usageStartTime);
+                const lifeConfig = getLifeConfig(tool);
+                const usedPercentage = ((tool.lifeLimit - tool.remainingLife) / tool.lifeLimit) * 100;
+                const remainingPercentage = (tool.remainingLife / tool.lifeLimit) * 100;
+
+                return (
+                  <div 
+                    key={tool._id} 
+                    className={`bg-gradient-to-br ${lifeConfig.cardBg} rounded-2xl shadow-lg border ${lifeConfig.cardBorder} p-6 hover:shadow-xl transition-all duration-300`}
+                  >
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-bold text-slate-900 text-xl">{tool.name}</h3>
+                          {tool.instanceNumber && (
+                            <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
+                              <Hash className="w-3 h-3" />
+                              Instance #{tool.instanceNumber}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4 text-sm">
+                          <span className="bg-white/60 backdrop-blur-sm px-3 py-1 rounded-full font-medium text-slate-700 capitalize">
+                            {tool.category}
+                          </span>
+                          {tool.shopkeeper?.shopId && (
+                            <div className="flex items-center gap-1 text-blue-600">
+                              <Building className="w-3 h-3" />
+                              <span>Shop: {tool.shopkeeper.shopId}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="px-4 py-2 bg-gradient-to-r from-orange-100 to-red-100 text-orange-800 text-sm font-bold rounded-xl border border-orange-200 flex items-center gap-2">
+                          <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                          ACTIVE
+                        </span>
+                        <p className="text-xs text-slate-500 mt-1">Real-time monitoring</p>
+                      </div>
+                    </div>
+
+                    {/* Enhanced Stats Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div className="bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-white/20">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-slate-100 p-2 rounded-lg">
+                            <Play className="w-5 h-5 text-slate-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-slate-600 font-medium">Started</p>
+                            <p className="font-bold text-slate-900">{new Date(tool.usageStartTime).toLocaleTimeString()}</p>
+                            <p className="text-xs text-slate-500">{new Date(tool.usageStartTime).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-white/20">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-blue-100 p-2 rounded-lg">
+                            <Timer className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-slate-600 font-medium">Duration</p>
+                            <p className="font-bold text-blue-700 text-lg">{duration.display}</p>
+                            <p className="text-xs text-blue-600">{duration.totalHours.toFixed(2)} hours</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-white/20">
+                        <div className="flex items-center gap-3">
+                          <div className={`${lifeConfig.status === 'critical' ? 'bg-red-100' : lifeConfig.status === 'warning' ? 'bg-yellow-100' : 'bg-green-100'} p-2 rounded-lg`}>
+                            <Target className={`w-5 h-5 ${lifeConfig.color}`} />
+                          </div>
+                          <div>
+                            <p className="text-sm text-slate-600 font-medium">Remaining Life</p>
+                            <p className={`font-bold text-lg ${lifeConfig.color}`}>
+                              {tool.remainingLife.toFixed(1)}h
+                            </p>
+                            <p className="text-xs text-slate-500">of {tool.lifeLimit}h total</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Enhanced Life Progress Bar */}
+                    <div className="mb-6">
+                      <div className="bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-sm font-bold text-slate-700">Equipment Life Status</span>
+                          <div className="text-right">
+                            <span className="text-sm font-bold text-slate-600">
+                              {usedPercentage.toFixed(1)}% utilized
+                            </span>
+                            <p className="text-xs text-slate-500">
+                              {remainingPercentage.toFixed(1)}% remaining
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
+                          <div
+                            className={`h-4 rounded-full bg-gradient-to-r ${lifeConfig.bgColor} transition-all duration-500 relative`}
+                            style={{ width: `${Math.max(5, usedPercentage)}%` }}
+                          >
+                            <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-between text-xs text-slate-600 mt-2">
+                          <span>0h (Start)</span>
+                          <span className="font-medium">Current: {(tool.lifeLimit - tool.remainingLife).toFixed(1)}h</span>
+                          <span>{tool.lifeLimit}h (End)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Critical Warning */}
+                    {tool.remainingLife <= tool.thresholdLimit && (
+                      <div className="mb-6 bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-xl p-4">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="bg-red-100 p-2 rounded-lg">
+                            <AlertTriangle className="w-5 h-5 text-red-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-red-800">Critical Life Alert</h4>
+                            <p className="text-red-700 text-sm">Immediate attention required</p>
+                          </div>
+                        </div>
+                        <div className="bg-red-100/50 rounded-lg p-3 mt-3">
+                          <p className="text-sm text-red-700 font-medium">
+                            ⚠️ Tool life is below threshold limit of {tool.thresholdLimit} hours. 
+                            Consider stopping usage and scheduling replacement.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Enhanced Stop Button */}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => onStopUsage(tool._id)}
+                        className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white py-4 px-6 rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-200 flex items-center justify-center gap-3 font-bold text-lg shadow-lg hover:shadow-xl"
+                      >
+                        <Square className="w-5 h-5" />
+                        Stop Operation
+                        {tool.instanceNumber && <span className="text-red-200">#{tool.instanceNumber}</span>}
+                      </button>
+                      
+                      <button
+                        className="px-4 py-4 bg-white/60 hover:bg-white/80 text-slate-700 rounded-xl transition-colors border border-white/40"
+                        title="Refresh data"
+                      >
+                        <RefreshCw className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Live Status Indicator */}
+                    <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span>Live monitoring • Updated {currentTime.toLocaleTimeString()}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
     </div>
