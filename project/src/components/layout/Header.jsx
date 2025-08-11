@@ -112,7 +112,7 @@ const Header = () => {
 
       {/* Main Header */}
       <div className="px-4 sm:px-6 py-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           {/* Left Section - Title & User Info */}
           <div className="flex items-center gap-4">
             <div className={`bg-gradient-to-r ${roleConfig.bgColor} p-3 rounded-xl shadow-lg`}>
@@ -138,9 +138,9 @@ const Header = () => {
           </div>
 
           {/* Right Section - Actions */}
-          <div className="flex items-center gap-4 flex-wrap justify-end">
+          <div className="flex items-center gap-2 sm:gap-4 flex-wrap justify-end">
             {/* Enhanced Search Bar */}
-            <form onSubmit={handleSearch} className="relative hidden lg:block">
+            <form onSubmit={handleSearch} className="relative hidden md:block">
               <div className="flex items-center">
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -149,7 +149,7 @@ const Header = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search equipment, orders, reports..."
-                    className="pl-12 pr-12 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent w-80 bg-slate-50 hover:bg-white transition-colors text-slate-700 font-medium"
+                    className="pl-12 pr-12 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 lg:w-80 bg-slate-50 hover:bg-white transition-colors text-slate-700 font-medium"
                   />
                   <button
                     type="button"

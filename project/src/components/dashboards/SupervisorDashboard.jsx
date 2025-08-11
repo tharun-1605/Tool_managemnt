@@ -528,7 +528,7 @@ const SupervisorDashboard = () => {
 
 
 
-      <div className="p-8 space-y-8">
+      <div className="px-4 sm:px-8 py-8 space-y-8">
 
         {/* Key Metrics Grid */}
 
@@ -672,7 +672,7 @@ const SupervisorDashboard = () => {
 
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-2">
 
-          <nav className="flex space-x-1">
+          <nav className="flex space-x-1 overflow-x-auto no-scrollbar">
 
             {tabs.map((tab) => {
 
@@ -686,7 +686,7 @@ const SupervisorDashboard = () => {
 
                   onClick={() => setActiveTab(tab.id)}
 
-                  className={`flex items-center gap-3 px-6 py-4 rounded-xl font-semibold text-sm transition-all duration-300 ${
+                  className={`min-w-[10rem] sm:min-w-[12rem] shrink-0 flex items-center gap-3 px-4 sm:px-6 py-4 rounded-xl font-semibold text-sm transition-all duration-300 ${
 
                     activeTab === tab.id
 

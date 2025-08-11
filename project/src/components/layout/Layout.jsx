@@ -118,7 +118,7 @@ const Layout = ({ children }) => {
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-50 transition-transform duration-300 ease-in-out ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } lg:translate-x-0`}>
+      } w-72 lg:w-auto lg:translate-x-0`}>
         <Sidebar 
           onClose={() => setSidebarOpen(false)} 
           isMinimized={isSidebarMinimized}
@@ -149,9 +149,9 @@ const Layout = ({ children }) => {
           <Header />
         </div>
 
-        {/* Breadcrumb Navigation */}
-        <div className="bg-white/70 backdrop-blur-sm border-b border-slate-200/50 px-6 py-3 hidden lg:block">
-          <nav className="flex items-center space-x-2 text-sm">
+      {/* Breadcrumb Navigation */}
+        <div className="bg-white/70 backdrop-blur-sm border-b border-slate-200/50 px-4 sm:px-6 py-3">
+          <nav className="flex items-center space-x-2 text-sm overflow-x-auto no-scrollbar">
             {getBreadcrumbs().map((crumb, index) => {
               const IconComponent = crumb.icon;
               return (
@@ -159,7 +159,7 @@ const Layout = ({ children }) => {
                   {index > 0 && (
                     <ChevronRight className="w-4 h-4 text-slate-400" />
                   )}
-                  <div className={`flex items-center gap-2 px-3 py-1 rounded-lg transition-colors ${
+                  <div className={`flex items-center gap-2 px-3 py-1 rounded-lg whitespace-nowrap transition-colors ${
                     index === getBreadcrumbs().length - 1 
                       ? `bg-${theme.accentColor.split('-')[0]}-100 text-${theme.accentColor} font-medium` 
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -176,17 +176,17 @@ const Layout = ({ children }) => {
         {/* Main Content */}
         <main className="relative z-10">
           {/* Content Container */}
-          <div className="px-6 py-8 lg:px-8">
+          <div className="px-4 sm:px-6 py-6 lg:px-8">
             {/* Content Background */}
-            <div className="bg-white/60 backdrop-blur-sm rounded-3xl border border-white/20 shadow-xl p-8 min-h-[calc(100vh-12rem)]">
+            <div className="bg-white/60 backdrop-blur-sm rounded-3xl border border-white/20 shadow-xl p-4 sm:p-6 lg:p-8 min-h-[calc(100vh-12rem)]">
               {children}
             </div>
           </div>
 
           {/* Footer */}
-          <footer className="px-6 py-4 lg:px-8">
+          <footer className="px-4 sm:px-6 py-4 lg:px-8">
             <div className="bg-white/40 backdrop-blur-sm rounded-2xl border border-white/20 p-6">
-              <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-4 text-center lg:text-left">
                 <div className="flex items-center gap-4 text-slate-600">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>

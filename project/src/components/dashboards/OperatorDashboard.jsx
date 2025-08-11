@@ -155,7 +155,7 @@ const OperatorDashboard = ({ defaultTab = 'overview' }) => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-all duration-300">
@@ -232,16 +232,16 @@ const OperatorDashboard = ({ defaultTab = 'overview' }) => {
         </div>
 
         {/* Enhanced Navigation Tabs */}
-        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 mb-8 overflow-hidden">
-          <div className="border-b border-slate-200 bg-slate-50">
-            <nav className="flex overflow-x-auto no-scrollbar">
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-200 mb-8 overflow-hidden">
+            <div className="border-b border-slate-200 bg-slate-50">
+              <nav className="flex overflow-x-auto no-scrollbar">
               {tabs.map((tab, index) => {
                 const IconComponent = tab.icon;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`min-w-[12rem] shrink-0 flex flex-col items-center gap-3 py-6 px-6 font-medium text-sm transition-all duration-300 relative ${
+                      className={`min-w-[10rem] sm:min-w-[12rem] shrink-0 flex flex-col items-center gap-3 py-6 px-4 sm:px-6 font-medium text-sm transition-all duration-300 relative ${
                       activeTab === tab.id
                         ? 'bg-white text-orange-600 shadow-sm border-b-2 border-orange-600'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
