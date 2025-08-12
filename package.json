@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "prop-types": "^15.8.1",
+    "react-csv": "^2.2.2"
+  },
+  "devDependencies": {
+    "@types/react-csv": "^1.1.10"
+  }
+}

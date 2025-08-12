@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { CSVLink } from 'react-csv';
 import { 
   Check, 
   X, 
@@ -165,9 +166,31 @@ const OrdersList = ({ orders, onStatusUpdate, userRole }) => {
               <option value="rejected">Rejected</option>
             </select>
 
-            <button className="p-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors">
+            <CSVLink
+              data={filteredOrders.map(order => ({
+                ToolName: order.tool?.name,
+                Category: order.tool?.category,
+                Quantity: order.quantity,
+                Status: order.status,
+                OrderDate: new Date(order.createdAt).toLocaleDateString(),
+                Shop: order.shopkeeper?.shopName,
+                Supervisor: order.supervisor?.name,
+              }))}
+              headers={[
+                { label: "Tool Name", key: "ToolName" },
+                { label: "Category", key: "Category" },
+                { label: "Quantity", key: "Quantity" },
+                { label: "Status", key: "Status" },
+                { label: "Order Date", key: "OrderDate" },
+                { label: "Shop", key: "Shop" },
+                { label: "Supervisor", key: "Supervisor" },
+              ]}
+              filename={"orders_list.csv"}
+              className="p-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+              target="_blank"
+            >
               <Download className="w-5 h-5" />
-            </button>
+            </CSVLink>
           </div>
         </div>
 

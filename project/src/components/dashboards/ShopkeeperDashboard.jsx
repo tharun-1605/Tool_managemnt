@@ -79,6 +79,65 @@ const ShopkeeperDashboard = ({ defaultTab = 'overview' }) => {
     }
   };
 
+  const handleExportOrders = () => {
+    const headers = [
+      'Order ID', 'Tool Name', 'Quantity', 'Status', 'Notes', 'Created Date', 'Updated Date'
+    ];
+
+    const rows = orders.map(order => [
+      order._id,
+      order.tool?.name || 'Unknown Tool',
+      order.quantity,
+      order.status,
+      order.notes || '',
+      new Date(order.createdAt).toLocaleString(),
+      new Date(order.updatedAt).toLocaleString()
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.href) URL.revokeObjectURL(link.href);
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute('download', 'shopkeeper_orders_report.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportTools = () => {
+    const headers = [
+      'Tool ID', 'Name', 'Category', 'Description', 'Company Quantity', 'Available Quantity', 
+      'In Use Quantity', 'Life Limit', 'Remaining Life', 'Threshold Limit', 'Reusable'
+    ];
+
+    const rows = tools.map(tool => [
+      tool._id,
+      tool.name,
+      tool.category,
+      tool.description || '',
+      tool.companyQuantity || 0,
+      tool.availableQuantity || 0,
+      tool.inUseQuantity || 0,
+      tool.lifeLimit || 0,
+      tool.remainingLife || 0,
+      tool.thresholdLimit || 0,
+      tool.reusable ? 'Yes' : 'No'
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.href) URL.revokeObjectURL(link.href);
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute('download', 'shopkeeper_tools_inventory.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const tabs = [
     { id: 'overview', label: 'Dashboard Overview', icon: BarChart3, description: 'System metrics & insights' },
     { id: 'tools', label: 'Tool Management', icon: Wrench, description: 'Inventory & maintenance' },
@@ -259,7 +318,10 @@ const ShopkeeperDashboard = ({ defaultTab = 'overview' }) => {
                           <button className="text-slate-400 hover:text-slate-600 p-2 rounded-lg hover:bg-slate-100">
                             <Filter className="w-4 h-4" />
                           </button>
-                          <button className="text-slate-400 hover:text-slate-600 p-2 rounded-lg hover:bg-slate-100">
+                          <button 
+                            onClick={handleExportOrders}
+                            className="text-slate-400 hover:text-slate-600 p-2 rounded-lg hover:bg-slate-100"
+                          >
                             <Download className="w-4 h-4" />
                           </button>
                         </div>

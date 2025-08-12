@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { CSVLink } from 'react-csv';
 import { 
   Edit, 
   Trash2, 
@@ -201,9 +202,29 @@ const ToolsList = ({ tools, onUpdate, userRole }) => {
               <option value="category">Sort by Category</option>
             </select>
 
-            <button className="p-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors">
+            <CSVLink 
+              data={filteredAndSortedTools.map(tool => ({
+                Name: tool.name,
+                Category: tool.category,
+                Status: tool.status || 'available',
+                RemainingLife: tool.remainingLife,
+                LifeLimit: tool.lifeLimit,
+                Stock: tool.stock || 0,
+              }))}
+              headers={[
+                { label: "Name", key: "Name" },
+                { label: "Category", key: "Category" },
+                { label: "Status", key: "Status" },
+                { label: "Remaining Life (h)", key: "RemainingLife" },
+                { label: "Life Limit (h)", key: "LifeLimit" },
+                { label: "Stock", key: "Stock" },
+              ]}
+              filename={"tools_list.csv"}
+              className="p-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+              target="_blank"
+            >
               <Download className="w-5 h-5" />
-            </button>
+            </CSVLink>
           </div>
         </div>
 

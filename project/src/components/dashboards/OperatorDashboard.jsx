@@ -70,6 +70,60 @@ const OperatorDashboard = ({ defaultTab = 'overview' }) => {
     }
   };
 
+  const handleExportActiveOperations = () => {
+    const headers = [
+      'Instance ID', 'Name', 'Category', 'Shop Name', 'Instance Number', 'Usage Start Time', 'Remaining Life', 'Threshold Limit'
+    ];
+
+    const rows = activeInstances.map(instance => [
+      instance._id,
+      instance.name,
+      instance.category,
+      instance.shopkeeper?.shopName || 'Unknown',
+      instance.instanceNumber,
+      new Date(instance.usageStartTime).toLocaleString(),
+      instance.remainingLife || 0,
+      instance.thresholdLimit || 0
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.href) URL.revokeObjectURL(link.href);
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute('download', 'operator_active_operations.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportUsageAnalytics = () => {
+    const headers = [
+      'Usage ID', 'Tool Name', 'Instance Number', 'Duration (hours)', 'Is Active', 'Created At'
+    ];
+
+    const rows = usage.map(record => [
+      record._id,
+      record.toolName,
+      record.tool?.instanceNumber || 'N/A',
+      record.duration ? record.duration.toFixed(2) : 'N/A',
+      record.isActive ? 'Yes' : 'No',
+      new Date(record.createdAt).toLocaleString()
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.href) URL.revokeObjectURL(link.href);
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute('download', 'operator_usage_analytics.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleStartUsage = async (toolId) => {
     try {
       const base = import.meta?.env?.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://tool-managemnt.onrender.com');
@@ -597,10 +651,13 @@ const OperatorDashboard = ({ defaultTab = 'overview' }) => {
                     <p className="text-slate-600 mt-1">Real-time tracking of equipment in use</p>
                   </div>
                   <div className="flex gap-3">
-                    <button className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 border border-slate-300">
-                      <Download className="w-4 h-4" />
-                      Export Log
-                    </button>
+                  <button 
+                    onClick={handleExportActiveOperations}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 border border-slate-300"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export Log
+                  </button>
                   </div>
                 </div>
                 
