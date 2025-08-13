@@ -74,7 +74,10 @@ export const NotificationProvider = ({ children }) => {
 
   const addNotification = useCallback((notification) => {
     const id = Date.now() + Math.random();
-    setNotifications(prev => [...prev, { ...notification, id, read: false }]);
+    setNotifications(prev => [
+      ...prev,
+      { ...notification, id, read: false, persistent: true }
+    ]);
   }, []);
 
   const removeNotification = useCallback((id) => {

@@ -13,11 +13,28 @@ import {
   Minimize2,
   Maximize2
 } from 'lucide-react';
+import axios from 'axios'; // <-- Add this import
 
 const NotificationPanel = () => {
   const { notifications, removeNotification, markAsRead } = useNotifications();
   const [isMinimized, setIsMinimized] = useState(false);
   const [hoveredNotification, setHoveredNotification] = useState(null);
+  const [lowLifeTools, setLowLifeTools] = useState([]); // <-- Add state
+
+  // Fetch tools under threshold on mount and every 60s
+  useEffect(() => {
+    const fetchLowLifeTools = async () => {
+      try {
+        const res = await axios.get('/api/tools/low-life');
+        setLowLifeTools(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        setLowLifeTools([]); // fallback to empty array on error
+      }
+    };
+    fetchLowLifeTools();
+    const interval = setInterval(fetchLowLifeTools, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     // Auto-remove notifications after a certain time based on type
@@ -120,25 +137,40 @@ const NotificationPanel = () => {
 
   const formatTime = (timestamp) => {
     const now = new Date();
-    const diff = now - timestamp;
+    const diff = now - new Date(timestamp);
     const minutes = Math.floor(diff / 60000);
     
     if (minutes < 1) return 'Just now';
     if (minutes < 60) return `${minutes}m ago`;
     if (minutes < 1440) return `${Math.floor(minutes / 60)}h ago`;
-    return timestamp.toLocaleDateString();
+    return new Date(timestamp).toLocaleDateString();
   };
 
-  const sortedNotifications = [...notifications].sort((a, b) => 
+  // Map lowLifeTools to persistent notifications
+  const toolNotifications = (Array.isArray(lowLifeTools) ? lowLifeTools : []).map(tool => ({
+    id: `tool-${tool._id}`,
+    type: 'warning',
+    title: 'Tool Below Threshold',
+    subtitle: tool.name,
+    message: `Instance: ${tool._id}\nRemaining life: ${tool.remainingLife} (Threshold: ${tool.thresholdLimit})`,
+    timestamp: tool.updatedAt || tool.createdAt || new Date(),
+    persistent: true,
+    category: tool.category,
+  }));
+
+  // Combine persistent tool notifications with other notifications
+  const allNotifications = [...toolNotifications, ...notifications];
+
+  const sortedNotifications = [...allNotifications].sort((a, b) => 
     getPriorityOrder(a.type) - getPriorityOrder(b.type)
   );
 
-  if (notifications.length === 0) return null;
+  if (sortedNotifications.length === 0) return null;
 
   return (
     <div className="fixed top-6 right-6 z-50 max-w-sm">
       {/* Panel Header (when multiple notifications) */}
-      {notifications.length > 1 && (
+      {sortedNotifications.length > 1 && (
         <div className="bg-white/95 backdrop-blur-sm border border-slate-200 rounded-t-2xl px-4 py-3 shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -147,7 +179,7 @@ const NotificationPanel = () => {
               </div>
               <div>
                 <h3 className="text-sm font-bold text-slate-900">System Notifications</h3>
-                <p className="text-xs text-slate-600">{notifications.length} active alerts</p>
+                <p className="text-xs text-slate-600">{sortedNotifications.length} active alerts</p>
               </div>
             </div>
             <button
@@ -161,7 +193,7 @@ const NotificationPanel = () => {
       )}
 
       {/* Notifications Container */}
-      <div className={`space-y-3 ${notifications.length > 1 ? (isMinimized ? 'hidden' : 'pt-0') : ''}`}>
+      <div className={`space-y-3 ${sortedNotifications.length > 1 ? (isMinimized ? 'hidden' : 'pt-0') : ''}`}>
         {sortedNotifications.map((notification, index) => {
           const config = getNotificationConfig(notification.type);
           const isCritical = notification.type === 'critical';
@@ -206,6 +238,18 @@ const NotificationPanel = () => {
                         <h4 className={`font-bold text-sm leading-tight ${config.textPrimary}`}>
                           {notification.title}
                         </h4>
+                        {/* Tool details if available */}
+                        {notification.subtitle && (
+                          <div className="text-xs mt-1 text-slate-700">
+                            <span><b>Tool Name:</b> {notification.subtitle}</span>
+                            {notification.id && typeof notification.id === 'string' && notification.id.startsWith('tool-') && (
+                              <span className="ml-2"><b>Instance:</b> {notification.id.replace('tool-', '')}</span>
+                            )}
+                            {notification.category && (
+                              <span className="ml-2"><b>Category:</b> {notification.category}</span>
+                            )}
+                          </div>
+                        )}
                         
                         {notification.subtitle && (
                           <p className={`text-xs font-medium mt-1 ${config.textSecondary}`}>
@@ -230,12 +274,14 @@ const NotificationPanel = () => {
                       </div>
 
                       {/* Close Button */}
-                      <button
-                        onClick={() => removeNotification(notification.id)}
-                        className={`p-1.5 text-slate-400 ${config.closeHover} rounded-lg transition-colors ml-2 flex-shrink-0`}
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                      {!notification.persistent && (
+                        <button
+                          onClick={() => removeNotification(notification.id)}
+                          className={`p-1.5 text-slate-400 ${config.closeHover} rounded-lg transition-colors ml-2 flex-shrink-0`}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
 
                     {/* Footer */}
@@ -276,10 +322,10 @@ const NotificationPanel = () => {
       </div>
 
       {/* Clear All Button (when multiple notifications) */}
-      {notifications.length > 2 && !isMinimized && (
+      {sortedNotifications.length > 2 && !isMinimized && (
         <div className="mt-3">
           <button
-            onClick={() => notifications.forEach(n => removeNotification(n.id))}
+            onClick={() => sortedNotifications.forEach(n => !n.persistent && removeNotification(n.id))}
             className="w-full bg-white/95 backdrop-blur-sm border border-slate-200 rounded-xl px-4 py-2 text-sm font-medium text-slate-700 hover:bg-white hover:text-slate-900 transition-all duration-200 shadow-md hover:shadow-lg"
           >
             Clear All Notifications
@@ -297,4 +343,4 @@ const NotificationPanel = () => {
   );
 };
 
-export default NotificationPanel;
+export default NotificationPanel

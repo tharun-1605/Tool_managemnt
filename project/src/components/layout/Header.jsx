@@ -16,15 +16,45 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { useNotifications } from '../../contexts/NotificationContext';
+import { useEffect, useRef } from 'react';
+import axios from 'axios';
 
 const Header = () => {
   const { user, logout } = useAuth();
   const { notifications, removeNotification, clearAllNotifications } = useNotifications();
+  const [lowLifeTools, setLowLifeTools] = useState([]);
+
+  // Fetch tools under threshold on mount and every 60s
+  useEffect(() => {
+    const fetchLowLifeTools = async () => {
+      try {
+        const res = await axios.get('/api/tools/low-life');
+        setLowLifeTools(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        setLowLifeTools([]);
+      }
+    };
+    fetchLowLifeTools();
+    const interval = setInterval(fetchLowLifeTools, 60000);
+    return () => clearInterval(interval);
+  }, []);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  const unreadCount = notifications.length;
+  // Map lowLifeTools to persistent notifications
+  const toolNotifications = (Array.isArray(lowLifeTools) ? lowLifeTools : []).map(tool => ({
+    id: `tool-${tool._id}`,
+    type: 'warning',
+    title: 'Tool Below Threshold',
+    message: `Tool: ${tool.name} | Remaining life: ${tool.remainingLife} (Threshold: ${tool.thresholdLimit})`,
+    timestamp: tool.updatedAt || tool.createdAt || new Date(),
+    persistent: true,
+    category: tool.category,
+  }));
+
+  const allNotifications = [...toolNotifications, ...notifications];
+  const unreadCount = allNotifications.length;
 
   const getRoleConfig = () => {
     switch (user?.role) {
@@ -195,7 +225,7 @@ const Header = () => {
                         <Bell className="w-4 h-4 text-slate-500" />
                         <span className="text-sm font-semibold text-slate-800">Notifications</span>
                       </div>
-                      {notifications.length > 0 && (
+                      {allNotifications.length > 0 && (
                         <button
                           onClick={() => clearAllNotifications()}
                           className="text-xs text-slate-500 hover:text-slate-700"
@@ -206,10 +236,10 @@ const Header = () => {
                     </div>
 
                     <div className="max-h-96 overflow-auto">
-                      {notifications.length === 0 ? (
+                      {allNotifications.length === 0 ? (
                         <div className="px-4 py-8 text-center text-slate-500 text-sm">No notifications</div>
                       ) : (
-                        notifications.slice(0, 8).map((n) => (
+                        allNotifications.slice(0, 8).map((n) => (
                           <div key={n.id} className="px-4 py-3 border-b border-slate-100 last:border-b-0">
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
@@ -219,12 +249,14 @@ const Header = () => {
                                   {n.timestamp ? new Date(n.timestamp).toLocaleString() : ''}
                                 </div>
                               </div>
-                              <button
-                                onClick={() => removeNotification(n.id)}
-                                className="text-xs text-slate-400 hover:text-slate-600"
-                              >
-                                Dismiss
-                              </button>
+                              {!n.persistent && (
+                                <button
+                                  onClick={() => removeNotification(n.id)}
+                                  className="text-xs text-slate-400 hover:text-slate-600"
+                                >
+                                  Dismiss
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))
