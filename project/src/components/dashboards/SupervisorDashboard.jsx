@@ -182,6 +182,7 @@ const SupervisorDashboard = () => {
 
       setTools(toolsRes.data || []);
 
+      console.log('My Tools API response:', myToolsRes.data);
       setMyTools(myToolsRes.data || []);
 
       setOrders(ordersRes.data || []);
@@ -1271,18 +1272,14 @@ const SupervisorDashboard = () => {
                                       </span>
 
                                       <span className={`text-xs px-3 py-1 font-bold rounded-full border-2 ${
-
+                                        instance.status === 'broken' ? 'bg-red-50 text-red-700 border-red-200' :
                                         instance.isActive 
-
                                           ? 'bg-orange-50 text-orange-700 border-orange-200' 
-
                                           : 'bg-green-50 text-green-700 border-green-200'
-
-                                      }`}>
-
-                                        {instance.isActive ? 'ACTIVE' : 'COMPLETED'}
-
-                                      </span>
+                                      }`}>{
+                                        instance.status === 'broken' ? 'BROKEN' :
+                                        instance.isActive ? 'ACTIVE' : 'COMPLETED'
+                                      }</span>
 
                                     </div>
 

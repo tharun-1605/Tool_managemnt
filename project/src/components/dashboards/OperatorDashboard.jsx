@@ -21,7 +21,8 @@ import {
   Download,
   Zap,
   Target,
-  Timer
+  Timer,
+  XCircle
 } from 'lucide-react';
 import StatsCard from '../common/StatsCard';
 import UsageChart from '../charts/UsageChart';
@@ -35,6 +36,7 @@ const OperatorDashboard = ({ defaultTab = 'overview' }) => {
   const [usage, setUsage] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedTool, setSelectedTool] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -149,6 +151,22 @@ const OperatorDashboard = ({ defaultTab = 'overview' }) => {
     } catch (error) {
       console.error('Error stopping tool usage:', error);
       alert(error.response?.data?.message || 'Failed to stop tool usage');
+    }
+  };
+
+  const handleMarkAsBroken = async (toolId) => {
+    if (!confirm('Are you sure you want to mark this tool as broken? This action cannot be undone.')) {
+      return;
+    }
+    try {
+      const base = import.meta?.env?.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://tool-managemnt.onrender.com');
+      const response = await axios.post(`${base}/api/tools/${toolId}/mark-as-broken`);
+      alert(response.data.message);
+      await fetchData(); // Refresh data
+      window.dispatchEvent(new Event('tools-active-changed'));
+    } catch (error) {
+      console.error('Error marking tool as broken:', error);
+      alert(error.response?.data?.message || 'Failed to mark tool as broken');
     }
   };
 
@@ -755,6 +773,13 @@ const OperatorDashboard = ({ defaultTab = 'overview' }) => {
                       >
                         <Square className="w-5 h-5" />
                         Stop Operation - Instance #{instance.instanceNumber}
+                      </button>
+                      <button
+                        onClick={() => handleMarkAsBroken(instance._id)}
+                        className="w-full bg-gradient-to-r from-gray-600 to-gray-700 text-white py-4 px-6 rounded-xl hover:from-gray-700 hover:to-gray-800 transition-all duration-300 flex items-center justify-center gap-3 font-semibold text-lg shadow-lg hover:shadow-xl mt-2"
+                      >
+                        <XCircle className="w-5 h-5" />
+                        Mark as Broken
                       </button>
                     </div>
                   ))}

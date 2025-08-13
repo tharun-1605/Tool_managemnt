@@ -63,7 +63,7 @@ router.get('/supervisor-analytics', authenticate, authorize('supervisor'), async
     const detailedUsage = await Usage.find(matchQuery)
       .populate('operator', 'name email')
       .populate('parentTool', 'name category')
-      .populate('tool', 'instanceNumber')
+      .populate('tool', 'instanceNumber status')
       .sort({ createdAt: -1 });
 
     // Group by tool and operator
@@ -95,7 +95,8 @@ router.get('/supervisor-analytics', authenticate, authorize('supervisor'), async
         startTime: usage.startTime,
         endTime: usage.endTime,
         duration: usage.duration,
-        isActive: usage.isActive
+        isActive: usage.isActive,
+        status: usage.tool.status
       });
       
       usageByTool[toolKey].operators[operatorKey].totalDuration += usage.duration || 0;

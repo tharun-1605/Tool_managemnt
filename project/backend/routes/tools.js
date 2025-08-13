@@ -201,17 +201,50 @@ router.post('/', authenticate, authorize('shopkeeper'), [
 
     const { name, description, category, lifeLimit, thresholdLimit, stock } = req.body;
 
-    const tool = new Tool({
-      name,
-      description,
-      category,
-      lifeLimit,
-      remainingLife: lifeLimit,
-      thresholdLimit,
-      shopName: req.user.shopName,
-      shopkeeper: req.user._id,
-      stock: stock || 1
-    });
+    let tool;
+    if (req.user.role === 'shopkeeper') {
+      console.log('Shopkeeper adding tool. req.user:', req.user);
+      tool = new Tool({
+        name,
+        description,
+        category,
+        lifeLimit,
+        remainingLife: lifeLimit,
+        thresholdLimit,
+        shopName: req.user.shopName,
+        shopkeeper: req.user._id,
+        stock: stock || 1
+      });
+    } else if (req.user.role === 'operator') {
+      const supervisor = await User.findOne({
+        email: req.user.supervisorEmail,
+        role: 'supervisor',
+        companyName: req.user.companyName
+      });
+
+      if (!supervisor) {
+        return res.status(403).json({ message: 'Supervisor not found for your company.' });
+      }
+
+      tool = new Tool({
+        name,
+        description,
+        category,
+        lifeLimit,
+        remainingLife: lifeLimit,
+        thresholdLimit,
+        shopName: supervisor.companyName, // Use supervisor's company name as shopName for operator-added tools
+        shopkeeper: supervisor._id, // Associate with supervisor as the 'owner'
+        stock: stock || 1,
+        isInstance: true, // Mark as an instance if created by operator
+        parentTool: null, // This will be set later if it's an instance of an existing tool
+        instanceNumber: null, // This will be set later
+        companyOwner: {
+          companyName: supervisor.companyName,
+          supervisorId: supervisor._id
+        }
+      });
+    }
 
     await tool.save();
     await tool.populate('shopkeeper', 'name shopName');
@@ -225,7 +258,21 @@ router.post('/', authenticate, authorize('shopkeeper'), [
 // Update tool
 router.put('/:id', authenticate, authorize('shopkeeper'), async (req, res) => {
   try {
-    const tool = await Tool.findOne({ _id: req.params.id, shopkeeper: req.user._id });
+    let tool;
+    if (req.user.role === 'shopkeeper') {
+      tool = await Tool.findOne({ _id: req.params.id, shopkeeper: req.user._id });
+    } else if (req.user.role === 'operator') {
+      const supervisor = await User.findOne({
+        email: req.user.supervisorEmail,
+        role: 'supervisor',
+        companyName: req.user.companyName
+      });
+
+      if (!supervisor) {
+        return res.status(403).json({ message: 'Supervisor not found for your company.' });
+      }
+      tool = await Tool.findOne({ _id: req.params.id, 'companyOwner.supervisorId': supervisor._id });
+    }
     
     if (!tool) {
       return res.status(404).json({ message: 'Tool not found' });
@@ -491,6 +538,70 @@ router.post('/:id/stop-usage', authenticate, authorize('operator'), async (req, 
       durationHours,
       canReuse: newRemainingLife > 0
     });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Mark tool as broken (operator only)
+router.post('/:id/mark-as-broken', authenticate, authorize('operator'), async (req, res) => {
+  try {
+    const toolInstance = await Tool.findById(req.params.id);
+
+    if (!toolInstance) {
+      return res.status(404).json({ message: 'Tool not found' });
+    }
+
+    if (toolInstance.status !== 'in-use' || !toolInstance.currentUser?.equals(req.user._id)) {
+      return res.status(400).json({ message: 'You are not currently using this tool' });
+    }
+
+    const endTime = new Date();
+    const startTime = toolInstance.usageStartTime;
+    const durationHours = (endTime - startTime) / (1000 * 60 * 60);
+
+    // Update tool instance
+    toolInstance.status = 'broken';
+    toolInstance.currentUser = null;
+    toolInstance.usageStartTime = null;
+    toolInstance.totalUsageHours += durationHours;
+
+    await toolInstance.save();
+
+    // Update parent tool quantities
+    const parentTool = await Tool.findById(toolInstance.parentTool);
+    if (parentTool) {
+      const supervisor = await User.findOne({
+        email: req.user.supervisorEmail,
+        role: 'supervisor',
+        companyName: req.user.companyName
+      });
+
+      const companyOrder = parentTool.orderedByCompanies.find(order =>
+        order.supervisorId.toString() === supervisor._id.toString()
+      );
+
+      if (companyOrder) {
+        companyOrder.inUseQuantity -= 1;
+        await parentTool.save();
+      }
+    }
+
+    // Update usage record
+    const usage = await Usage.findOne({
+      tool: toolInstance._id,
+      operator: req.user._id,
+      isActive: true
+    });
+
+    if (usage) {
+      usage.endTime = endTime;
+      usage.duration = durationHours;
+      usage.isActive = false;
+      await usage.save();
+    }
+
+    res.json({ message: 'Tool marked as broken and removed from service.', tool: toolInstance });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

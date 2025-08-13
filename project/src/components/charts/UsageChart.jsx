@@ -25,7 +25,8 @@ const UsageChart = ({ title = "Usage Analytics" }) => {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`https://tool-managemnt.onrender.com/api/usage/analytics?period=${period}`);
+      const response = await axios.get(`https://tool-managemnt.onrender.com/api/usage/analytics?period=${period}`, { timeout: 30000 });
+      console.log(response.data);
       setData(response.data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -61,7 +62,7 @@ const UsageChart = ({ title = "Usage Analytics" }) => {
                 <div className="w-12 h-12 border-4 border-slate-200 border-t-4 border-t-blue-600 rounded-full animate-spin"></div>
                 <div className="w-8 h-8 border-4 border-slate-100 border-t-4 border-t-orange-500 rounded-full animate-spin absolute top-2 left-2" style={{animationDirection: 'reverse'}}></div>
               </div>
-              <p className="text-slate-600 font-medium">Loading analytics...</p>
+              <p className="text-slate-600 font-medium">Loading analytics... (This may take a moment on the free server)</p>
             </div>
           </div>
         </div>

@@ -57,4 +57,6 @@ const usageSchema = new mongoose.Schema({
   timestamps: true
 });
 
+usageSchema.index({ createdAt: 1 });
+
 export default mongoose.model('Usage', usageSchema);

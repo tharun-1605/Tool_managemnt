@@ -25,7 +25,7 @@ import {
   Building
 } from 'lucide-react';
 
-const MyToolsList = ({ tools, userRole = 'supervisor' }) => {
+const MyToolsList = ({ tools = [], userRole = 'supervisor' }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('name');

@@ -39,7 +39,7 @@ const toolSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['available', 'in-use', 'maintenance', 'retired'],
+    enum: ['available', 'in-use', 'maintenance', 'retired', 'broken'],
     default: 'available'
   },
   currentUser: {
