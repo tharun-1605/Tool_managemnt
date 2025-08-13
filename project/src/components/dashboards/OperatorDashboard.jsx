@@ -28,6 +28,35 @@ import StatsCard from '../common/StatsCard';
 import UsageChart from '../charts/UsageChart';
 
 const OperatorDashboard = ({ defaultTab = 'overview' }) => {
+  // State for Request Tool modal
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestForm, setRequestForm] = useState({
+    toolName: '',
+    category: '',
+    reason: '',
+  });
+  const [requestLoading, setRequestLoading] = useState(false);
+  // Handle input change for request form
+  const handleRequestInput = (e) => {
+    setRequestForm({ ...requestForm, [e.target.name]: e.target.value });
+  };
+
+  // Submit tool request
+  const handleRequestSubmit = async (e) => {
+    e.preventDefault();
+    setRequestLoading(true);
+    try {
+      const base = import.meta?.env?.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://tool-managemnt.onrender.com');
+      await axios.post(`${base}/api/tools/request`, requestForm);
+      alert('Tool request submitted to your supervisor!');
+      setShowRequestModal(false);
+      setRequestForm({ toolName: '', category: '', reason: '' });
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to submit request');
+    } finally {
+      setRequestLoading(false);
+    }
+  };
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [stats, setStats] = useState({});
   const [parentTools, setParentTools] = useState([]);
@@ -194,7 +223,7 @@ const OperatorDashboard = ({ defaultTab = 'overview' }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Header Section */}
+  {/* Header Section */}
       <div className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
           <div className="flex items-center justify-between">
@@ -208,6 +237,70 @@ const OperatorDashboard = ({ defaultTab = 'overview' }) => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              {/* Request Tool Button */}
+              <button
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg shadow hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-semibold mr-2"
+                onClick={() => setShowRequestModal(true)}
+              >
+                Request Tool
+              </button>
+      {/* Request Tool Modal */}
+      {showRequestModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
+            <button
+              className="absolute top-3 right-3 text-slate-400 hover:text-red-500 text-2xl font-bold"
+              onClick={() => setShowRequestModal(false)}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-4 text-slate-900">Request Tool</h2>
+            <form onSubmit={handleRequestSubmit} className="space-y-4">
+              <div>
+                <label className="block text-slate-700 font-medium mb-1">Tool Name</label>
+                <input
+                  type="text"
+                  name="toolName"
+                  value={requestForm.toolName}
+                  onChange={handleRequestInput}
+                  required
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 font-medium mb-1">Category</label>
+                <input
+                  type="text"
+                  name="category"
+                  value={requestForm.category}
+                  onChange={handleRequestInput}
+                  required
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 font-medium mb-1">Reason / Description</label>
+                <textarea
+                  name="reason"
+                  value={requestForm.reason}
+                  onChange={handleRequestInput}
+                  required
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                  rows={3}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={requestLoading}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 mt-2 disabled:opacity-60"
+              >
+                {requestLoading ? 'Submitting...' : 'Submit Request'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
               <button
                 onClick={() => fetchData()}
                 disabled={refreshing}

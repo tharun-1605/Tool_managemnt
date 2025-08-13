@@ -7,6 +7,25 @@ import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Get all tools below threshold for supervisor notifications
+router.get('/low-life', authenticate, authorize('supervisor'), async (req, res) => {
+  try {
+    // Find all tool instances belonging to this supervisor's company that are below or at threshold
+    const supervisor = await User.findById(req.user._id);
+    if (!supervisor) return res.status(403).json({ message: 'Supervisor not found' });
+
+    // Find all tool instances (not parent tools) for this supervisor's company
+    const tools = await Tool.find({
+      isInstance: true,
+      'companyOwner.supervisorId': supervisor._id,
+      $expr: { $lte: ['$remainingLife', '$thresholdLimit'] }
+    });
+    res.json(tools);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // Get all tools (filtered by role)
 router.get('/', authenticate, async (req, res) => {
   try {
@@ -325,6 +344,20 @@ router.post('/:id/start-usage', authenticate, authorize('operator'), async (req,
 
       if (toolToUse.remainingLife <= 0) {
         return res.status(400).json({ message: 'This tool instance has no remaining life' });
+      }
+
+      // Notify supervisor if tool is already below or at threshold when starting usage
+      if (toolToUse.remainingLife <= toolToUse.thresholdLimit) {
+        const io = req.app.get('io');
+        if (io) {
+          io.to('supervisor').emit('tool-threshold-alert', {
+            tool: toolToUse.name,
+            remainingLife: toolToUse.remainingLife,
+            thresholdLimit: toolToUse.thresholdLimit,
+            shopName: toolToUse.shopName,
+            instanceNumber: toolToUse.instanceNumber
+          });
+        }
       }
 
       // Reuse the existing instance

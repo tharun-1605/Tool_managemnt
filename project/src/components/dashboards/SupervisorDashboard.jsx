@@ -47,6 +47,7 @@ import {
 } from 'lucide-react';
 
 import StatsCard from '../common/StatsCard';
+import { useNotifications } from '../../contexts/NotificationContext';
 
 import ShopsList from '../shops/ShopsList';
 
@@ -61,6 +62,8 @@ import MyToolsList from '../tools/MyToolsList';
 
 
 const SupervisorDashboard = () => {
+  const { notifications, addNotification } = useNotifications();
+  const [notifOpen, setNotifOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -82,12 +85,47 @@ const SupervisorDashboard = () => {
 
   const [loadingProgress, setLoadingProgress] = useState('');
 
+  // Tool Requests State
+  const [toolRequests, setToolRequests] = useState([]);
+  const [toolRequestsLoading, setToolRequestsLoading] = useState(false);
+  const [toolRequestsError, setToolRequestsError] = useState(null);
+
 
 
   useEffect(() => {
-
     fetchData();
+    fetchToolRequests();
+  }, []);
 
+  // Notify supervisor about all tools already below threshold on dashboard load
+  useEffect(() => {
+    const fetchLowLifeTools = async () => {
+      try {
+        const base = import.meta?.env?.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://tool-managemnt.onrender.com');
+        const res = await axios.get(`${base}/api/tools/low-life`);
+        const lowLifeTools = res.data;
+        if (lowLifeTools && lowLifeTools.length > 0) {
+          const alreadyNotified = notifications.some(
+            n => n.type === 'warning' && n.title === 'Tools Below Threshold'
+          );
+          if (!alreadyNotified) {
+            const toolList = lowLifeTools.map(tool =>
+              `${tool.name} (${Number(tool.remainingLife).toFixed(1)}h left, threshold: ${tool.thresholdLimit})`
+            ).join('\n');
+            addNotification({
+              id: `tool-threshold-${Date.now()}-${Math.floor(Math.random()*10000)}`,
+              type: 'warning',
+              title: 'Tools Below Threshold',
+              message: `The following tools are below their threshold limit:\n${toolList}`,
+              timestamp: new Date()
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching low life tools:', error);
+      }
+    };
+    fetchLowLifeTools();
   }, []);
 
 
@@ -180,10 +218,12 @@ const SupervisorDashboard = () => {
 
       setStats(statsRes.data || {});
 
-      setTools(toolsRes.data || []);
 
-      console.log('My Tools API response:', myToolsRes.data);
-      setMyTools(myToolsRes.data || []);
+  setTools(toolsRes.data || []);
+  console.log('Loaded tools:', toolsRes.data || []);
+
+  console.log('My Tools API response:', myToolsRes.data);
+  setMyTools(myToolsRes.data || []);
 
       setOrders(ordersRes.data || []);
 
@@ -234,6 +274,33 @@ const SupervisorDashboard = () => {
       setLoading(false);
 
       setLoadingProgress('');
+
+    }
+
+  };
+
+
+
+  const fetchToolRequests = async () => {
+
+    setToolRequestsLoading(true);
+
+    setToolRequestsError(null);
+
+    try {
+
+      const base = import.meta?.env?.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://tool-managemnt.onrender.com');
+      const res = await axios.get(`${base}/api/tools/requests`);
+
+      setToolRequests(res.data);
+
+    } catch (err) {
+
+      setToolRequestsError('Failed to load tool requests');
+
+    } finally {
+
+      setToolRequestsLoading(false);
 
     }
 
@@ -349,7 +416,9 @@ const SupervisorDashboard = () => {
 
     { id: 'monitor', label: 'Tool Monitor', icon: Eye, color: 'red' },
 
-    { id: 'analytics', label: 'Usage Analytics', icon: BarChart3, color: 'indigo' }
+    { id: 'analytics', label: 'Usage Analytics', icon: BarChart3, color: 'indigo' },
+
+    { id: 'requests', label: 'Tool Requests', icon: Plus, color: 'pink' }
 
   ];
 
@@ -501,24 +570,56 @@ const SupervisorDashboard = () => {
 
             </div>
 
+
             <div className="flex items-center space-x-6">
-
               <div className="flex items-center space-x-3">
-
                 <div className="bg-green-500 w-3 h-3 rounded-full shadow-lg"></div>
-
                 <span className="text-green-700 font-semibold text-sm tracking-wide">SYSTEM OPERATIONAL</span>
-
               </div>
-
-              <button className="relative p-2 text-gray-600 hover:text-blue-600 transition-colors">
-
-                <Bell className="w-6 h-6" />
-
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
-
-              </button>
-
+              <div className="relative">
+                <button
+                  className="relative p-2 text-gray-600 hover:text-blue-600 transition-colors"
+                  onClick={() => setNotifOpen((open) => !open)}
+                  aria-label="Show notifications"
+                >
+                  <Bell className="w-6 h-6" />
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {notifications.length}
+                    </span>
+                  )}
+                </button>
+                {notifOpen && (
+                  <div className="absolute right-0 mt-2 w-96 max-w-full bg-white border border-gray-200 rounded-xl shadow-lg z-50">
+                    <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                      <span className="font-semibold text-gray-900">Notifications</span>
+                      <button className="text-xs text-blue-600 hover:underline" onClick={() => setNotifOpen(false)}>Close</button>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto divide-y divide-gray-100">
+                      {notifications.length === 0 ? (
+                        <div className="p-4 text-gray-500 text-sm">No notifications</div>
+                      ) : (
+                        notifications.slice().reverse().map((notif, idx) => (
+                          <div key={idx} className="p-4 flex items-start gap-3 hover:bg-gray-50 transition-colors">
+                            <div>
+                              {notif.type === 'warning' ? (
+                                <AlertTriangle className="w-5 h-5 text-orange-500 mt-1" />
+                              ) : (
+                                <Bell className="w-5 h-5 text-blue-500 mt-1" />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="font-semibold text-gray-900 text-sm">{notif.title}</div>
+                              <div className="text-gray-700 text-sm mt-1">{notif.message}</div>
+                              <div className="text-gray-400 text-xs mt-1">{notif.timestamp ? new Date(notif.timestamp).toLocaleString() : ''}</div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
           </div>
@@ -1338,6 +1439,106 @@ const SupervisorDashboard = () => {
                   )}
 
                 </div>
+
+              </div>
+
+            </div>
+
+          )}
+
+
+
+          {activeTab === 'requests' && (
+
+            <div className="bg-white rounded-2xl border border-pink-200 shadow-sm">
+
+              <div className="p-8 border-b border-pink-100 flex items-center justify-between">
+
+                <h2 className="text-2xl font-bold text-pink-700 flex items-center gap-3">
+
+                  <Plus className="w-6 h-6 text-pink-600" />
+
+                  Tool Requests
+
+                </h2>
+
+                <button
+
+                  onClick={fetchToolRequests}
+
+                  className="bg-pink-100 hover:bg-pink-200 text-pink-700 px-4 py-2 rounded-lg font-semibold border border-pink-300"
+
+                >
+
+                  Refresh
+
+                </button>
+
+              </div>
+
+              <div className="p-8">
+
+                {toolRequestsLoading ? (
+
+                  <div className="text-center text-pink-600">Loading requests...</div>
+
+                ) : toolRequestsError ? (
+
+                  <div className="text-center text-red-500">{toolRequestsError}</div>
+
+                ) : toolRequests.length === 0 ? (
+
+                  <div className="text-center text-gray-500 py-12">
+
+                    <Plus className="w-10 h-10 mx-auto mb-3 text-pink-300" />
+
+                    <p className="font-medium">No tool requests found</p>
+
+                    <p className="text-sm mt-1">Operator requests will appear here</p>
+
+                  </div>
+
+                ) : (
+
+                  <div className="space-y-6">
+
+                    {toolRequests.map((req) => (
+
+                      <div key={req._id} className="p-6 bg-pink-50 rounded-xl border border-pink-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+                        <div>
+
+                          <div className="font-bold text-pink-800 text-lg">{req.toolName}</div>
+
+                          <div className="text-sm text-pink-600">Category: {req.category}</div>
+
+                          <div className="text-xs text-gray-500 mt-1">Requested by: {req.operator?.name} ({req.operator?.email})</div>
+
+                          <div className="text-xs text-gray-500 mt-1">Reason: {req.reason}</div>
+
+                        </div>
+
+                        <div className="text-right">
+
+                          <span className={`px-4 py-2 rounded-full text-xs font-bold border-2 ${
+                            req.status === 'pending' ? 'bg-pink-100 text-pink-700 border-pink-300' :
+                            req.status === 'approved' ? 'bg-green-100 text-green-700 border-green-300' :
+                            'bg-red-100 text-red-700 border-red-300'
+                          }`}>
+
+                            {req.status.toUpperCase()}
+
+                          </span>
+
+                        </div>
+
+                      </div>
+
+                    ))}
+
+                  </div>
+
+                )}
 
               </div>
 

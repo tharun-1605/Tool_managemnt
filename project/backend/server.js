@@ -5,11 +5,13 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 
+
 import authRoutes from './routes/auth.js';
 import toolRoutes from './routes/tools.js';
 import orderRoutes from './routes/orders.js';
 import usageRoutes from './routes/usage.js';
 import dashboardRoutes from './routes/dashboard.js';
+import toolRequestRoutes from './routes/toolRequests.js';
 
 dotenv.config();
 
@@ -54,11 +56,13 @@ io.on('connection', (socket) => {
 app.set('io', io);
 
 // Routes
+
 app.use('/api/auth', authRoutes);
 app.use('/api/tools', toolRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/usage', usageRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/tools', toolRequestRoutes); // Tool requests endpoint
 
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {
