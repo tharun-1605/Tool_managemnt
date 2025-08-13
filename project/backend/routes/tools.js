@@ -641,6 +641,27 @@ router.post('/:id/mark-as-broken', authenticate, authorize('operator'), async (r
 });
 
 // Delete tool
+// Get all tool instances for monitoring (Supervisor only)
+router.get('/monitor-instances', authenticate, authorize('supervisor'), async (req, res) => {
+  try {
+    const supervisor = await User.findById(req.user._id);
+    if (!supervisor) {
+      return res.status(403).json({ message: 'Supervisor not found' });
+    }
+
+    const toolInstances = await Tool.find({
+      isInstance: true,
+      'companyOwner.supervisorId': supervisor._id,
+    })
+    .populate('parentTool', 'name category') // Populate parent tool details if needed
+    .populate('currentUser', 'name'); // Populate current user if tool is in use
+
+    res.json(toolInstances);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 router.delete('/:id', authenticate, authorize('shopkeeper'), async (req, res) => {
   try {
     const tool = await Tool.findOneAndDelete({ _id: req.params.id, shopkeeper: req.user._id });

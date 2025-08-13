@@ -70,6 +70,7 @@ const SupervisorDashboard = () => {
   const [stats, setStats] = useState({});
 
   const [tools, setTools] = useState([]);
+  const [monitorTools, setMonitorTools] = useState([]);
 
   const [myTools, setMyTools] = useState([]);
 
@@ -161,7 +162,7 @@ const SupervisorDashboard = () => {
       
 
       const base = import.meta?.env?.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://tool-managemnt.onrender.com');
-      const [statsRes, toolsRes, myToolsRes, ordersRes, analyticsRes] = await Promise.all([
+      const [statsRes, toolsRes, myToolsRes, ordersRes, analyticsRes, monitorToolsRes] = await Promise.all([
 
         axios.get(`${base}/api/dashboard/stats`, axiosConfig)
           .catch(err => {
@@ -206,6 +207,11 @@ const SupervisorDashboard = () => {
 
             return { data: {} };
 
+          }),
+        axios.get(`${base}/api/tools/monitor-instances`, axiosConfig)
+          .catch(err => {
+            console.error('Monitor Tools API failed:', err);
+            return { data: [] };
           })
 
       ]);
@@ -228,6 +234,7 @@ const SupervisorDashboard = () => {
       setOrders(ordersRes.data || []);
 
       setAnalytics(analyticsRes.data || {});
+      setMonitorTools(monitorToolsRes.data || []);
 
       
 
@@ -650,7 +657,7 @@ const SupervisorDashboard = () => {
 
                 <p className="text-3xl font-bold text-gray-900">{stats.totalOrders || 0}</p>
 
-                <p className="text-gray-600 font-medium text-sm">+12% from last month</p>
+                <p className="text-gray-600 font-medium text-sm">All-time order count</p>
 
               </div>
 
@@ -680,9 +687,9 @@ const SupervisorDashboard = () => {
 
               <div className="text-right">
 
-                <p className="text-3xl font-bold text-gray-900">{myTools.length || 0}</p>
+                <p className="text-3xl font-bold text-gray-900">{monitorTools.length || 0}</p>
 
-                <p className="text-gray-600 font-medium text-sm">Available inventory</p>
+                <p className="text-gray-600 font-medium text-sm">Total Tools</p>
 
               </div>
 
@@ -690,9 +697,9 @@ const SupervisorDashboard = () => {
 
             <div>
 
-              <h3 className="text-gray-900 font-semibold text-lg">My Tools</h3>
+              <h3 className="text-gray-900 font-semibold text-lg">Total Tools</h3>
 
-              <p className="text-gray-500 text-sm">Company tool count</p>
+              <p className="text-gray-500 text-sm">Currently active tools</p>
 
             </div>
 
@@ -712,9 +719,9 @@ const SupervisorDashboard = () => {
 
               <div className="text-right">
 
-                <p className="text-3xl font-bold text-gray-900">{stats.pendingOrders || 0}</p>
+                <p className="text-3xl font-bold text-gray-900">{monitorTools.filter(tool => tool.remainingLife <= tool.thresholdLimit).length}</p>
 
-                <p className="text-gray-600 font-medium text-sm">Awaiting approval</p>
+                <p className="text-gray-600 font-medium text-sm">Tools requiring attention</p>
 
               </div>
 
@@ -722,9 +729,9 @@ const SupervisorDashboard = () => {
 
             <div>
 
-              <h3 className="text-gray-900 font-semibold text-lg">Pending Orders</h3>
+              <h3 className="text-gray-900 font-semibold text-lg">Maintenance Due</h3>
 
-              <p className="text-gray-500 text-sm">Requires attention</p>
+              <p className="text-gray-500 text-sm">Tools requiring immediate attention</p>
 
             </div>
 
@@ -746,11 +753,11 @@ const SupervisorDashboard = () => {
 
                 <p className="text-3xl font-bold text-gray-900">
 
-                  {analytics.toolSummary?.reduce((sum, tool) => sum + (tool.instanceCount || 0), 0) || 0}
+                  {monitorTools.filter(tool => tool.status === 'in-use').length}
 
                 </p>
 
-                <p className="text-gray-600 font-medium text-sm">Currently active</p>
+                <p className="text-gray-600 font-medium text-sm">Tools currently in operation</p>
 
               </div>
 
@@ -758,7 +765,7 @@ const SupervisorDashboard = () => {
 
             <div>
 
-              <h3 className="text-gray-900 font-semibold text-lg">Active Usage</h3>
+              <h3 className="text-gray-900 font-semibold text-lg">Tools in Use</h3>
 
               <p className="text-gray-500 text-sm">Real-time sessions</p>
 
@@ -1154,11 +1161,7 @@ const SupervisorDashboard = () => {
 
                 {(() => {
 
-                  const orderToolIds = new Set(orders.map(order => order.tool?._id));
-
-                  const filteredTools = tools.filter(tool => orderToolIds.has(tool._id));
-
-                  return <ToolMonitor tools={filteredTools} detailedUsage={analytics.detailedUsage} />;
+                  return <ToolMonitor tools={monitorTools} detailedUsage={analytics.detailedUsage} />;
 
                 })()}
 
